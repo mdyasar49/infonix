@@ -105,24 +105,7 @@ export default function VideoPlayer({
   const [buffered, setBuffered] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
 
-  const isYouTube =
-    channel?.stream_url?.includes('youtube.com') ||
-    channel?.stream_url?.includes('youtu.be');
 
-  const getEmbedUrl = (url) => {
-    if (!url) return '';
-    if (url.includes('/embed/')) {
-      if (!url.includes('autoplay=1')) {
-        return url + (url.includes('?') ? '&autoplay=1' : '?autoplay=1');
-      }
-      return url;
-    }
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-    if (match && match[1]) {
-      return `https://www.youtube-nocookie.com/embed/${match[1]}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`;
-    }
-    return url;
-  };
 
   const isLiveStream = duration === 0 || duration === Infinity || !isFinite(duration) || (channel?.category_slug !== 'movies' && !channel?.id?.toString().startsWith('movie_'));
 
@@ -160,8 +143,8 @@ export default function VideoPlayer({
       const tLang = (tr.lang || '').toLowerCase();
 
       const isMatch = prefixes.some(p => tLang.startsWith(p) || tLang === p) ||
-                      tName.includes(targetLang) ||
-                      prefixes.some(p => tName.includes(p));
+        tName.includes(targetLang) ||
+        prefixes.some(p => tName.includes(p));
 
       if (isMatch) {
         matchIndex = i;
@@ -192,17 +175,7 @@ export default function VideoPlayer({
     setAudioTracks([]);
     setCurrentAudioTrack(0);
 
-    if (streamUrl.includes('youtube.com') || streamUrl.includes('youtu.be')) {
-      setIsLoading(false);
-      setError(null);
-      setIsPlaying(true);
-      setStreamStats({
-        resolution: channel?.quality || '4K Ultra HD',
-        bitrate: 8500,
-        buffer: 15.0,
-      });
-      return;
-    }
+
 
     const playWithHls = (urlToPlay) => {
       if (hlsRef.current) {
@@ -325,7 +298,7 @@ export default function VideoPlayer({
         });
       } else {
         video.src = urlToPlay;
-        video.play().catch(() => {});
+        video.play().catch(() => { });
       }
     };
 
@@ -439,7 +412,7 @@ export default function VideoPlayer({
     if (isPlaying) {
       videoRef.current.pause();
     } else {
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(() => { });
     }
   };
 
@@ -475,9 +448,9 @@ export default function VideoPlayer({
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+      containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => { });
     } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => { });
     }
   };
 
@@ -522,42 +495,21 @@ export default function VideoPlayer({
           border: isFullscreen || isTheaterMode ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        {isYouTube ? (
-          <iframe
-            key={channel?.id || channel?.stream_url}
-            src={getEmbedUrl(channel?.stream_url)}
-            title={channel?.name || 'StreamPulse Cinema Player'}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            loading="eager"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              border: 0,
-              backgroundColor: '#000000',
-              zIndex: 3,
-            }}
-          />
-        ) : (
-          <video
-            ref={videoRef}
-            onClick={handlePlayPause}
-            playsInline
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              backgroundColor: '#000000',
-              cursor: 'pointer',
-            }}
-          />
-        )}
+        <video
+          ref={videoRef}
+          onClick={handlePlayPause}
+          playsInline
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            backgroundColor: '#000000',
+            cursor: 'pointer',
+          }}
+        />
 
         {/* Loading Spinner */}
         {isLoading && (
@@ -664,161 +616,159 @@ export default function VideoPlayer({
           </Box>
         )}
 
-        {/* 2. YouTube Authentic Bottom Control Bar (For Live Channels & Native VOD) */}
-        {!isYouTube && (
-          <Fade in={showControls || !isPlaying}>
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              p: { xs: 1, sm: 1.8 },
-              background: 'linear-gradient(to top, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.5) 70%, transparent 100%)',
-              zIndex: 14,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 0.8,
-            }}
-          >
-            {/* Timeline Scrubber Bar */}
-            {!isLiveStream && duration > 0 && (
-              <Box sx={{ px: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
-                <Slider
-                  size="small"
-                  value={currentTime}
-                  min={0}
-                  max={duration || 100}
-                  onChange={(e, val) => {
-                    setIsSeeking(true);
-                    setCurrentTime(val);
-                  }}
-                  onChangeCommitted={handleSeek}
-                  sx={{
-                    color: '#e11d48',
-                    height: 4,
-                    p: '10px 0',
-                    '& .MuiSlider-thumb': {
-                      width: 12,
-                      height: 12,
-                      transition: '0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover, &.Mui-focusVisible': {
-                        boxShadow: '0 0 0 8px rgba(225, 29, 72, 0.25)',
-                        width: 16,
-                        height: 16,
-                      },
-                    },
-                    '& .MuiSlider-track': {
-                      background: 'linear-gradient(90deg, #f97316, #e11d48)',
-                    },
-                    '& .MuiSlider-rail': {
-                      bgcolor: 'rgba(255, 255, 255, 0.25)',
-                    },
-                  }}
-                />
-              </Box>
-            )}
-
-            {/* Controls Button Row */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-              {/* Left Controls: Play/Pause, Next, Volume, Time */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1.5 } }}>
-                <IconButton onClick={handlePlayPause} sx={{ color: '#ffffff', '&:hover': { color: '#e11d48' } }}>
-                  {isPlaying ? <PauseIcon fontSize="medium" /> : <PlayArrowIcon fontSize="medium" />}
-                </IconButton>
-
-                {onSelectNextChannel && (
-                  <IconButton onClick={onSelectNextChannel} sx={{ color: '#ffffff', '&:hover': { color: '#f97316' } }}>
-                    <SkipNextIcon fontSize="small" />
-                  </IconButton>
-                )}
-
-                {/* Volume Slider with Hover */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: { xs: 80, sm: 130 } }}>
-                  <IconButton onClick={toggleMute} sx={{ color: '#ffffff', p: 0.5, '&:hover': { color: '#00e5ff' } }}>
-                    {isMuted || volume === 0 ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
-                  </IconButton>
+        {/* 2. Authentic Bottom Control Bar */}
+        <Fade in={showControls || !isPlaying}>
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                p: { xs: 1, sm: 1.8 },
+                background: 'linear-gradient(to top, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.5) 70%, transparent 100%)',
+                zIndex: 14,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.8,
+              }}
+            >
+              {/* Timeline Scrubber Bar */}
+              {!isLiveStream && duration > 0 && (
+                <Box sx={{ px: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
                   <Slider
                     size="small"
-                    value={isMuted ? 0 : volume}
+                    value={currentTime}
                     min={0}
-                    max={1}
-                    step={0.05}
-                    onChange={handleVolumeChange}
+                    max={duration || 100}
+                    onChange={(e, val) => {
+                      setIsSeeking(true);
+                      setCurrentTime(val);
+                    }}
+                    onChangeCommitted={handleSeek}
                     sx={{
-                      color: '#ffffff',
-                      height: 3,
-                      '& .MuiSlider-thumb': { width: 10, height: 10 },
+                      color: '#e11d48',
+                      height: 4,
+                      p: '10px 0',
+                      '& .MuiSlider-thumb': {
+                        width: 12,
+                        height: 12,
+                        transition: '0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(225, 29, 72, 0.25)',
+                          width: 16,
+                          height: 16,
+                        },
+                      },
+                      '& .MuiSlider-track': {
+                        background: 'linear-gradient(90deg, #f97316, #e11d48)',
+                      },
+                      '& .MuiSlider-rail': {
+                        bgcolor: 'rgba(255, 255, 255, 0.25)',
+                      },
                     }}
                   />
                 </Box>
+              )}
 
-                {/* Time & Live Indicator */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
-                  {isLiveStream ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
-                      <span className="live-dot" />
-                      <Typography variant="caption" sx={{ color: '#e11d48', fontWeight: 800, fontSize: '0.78rem' }}>
-                        LIVE
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 600, fontSize: '0.78rem' }}>
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </Typography>
+              {/* Controls Button Row */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                {/* Left Controls: Play/Pause, Next, Volume, Time */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1.5 } }}>
+                  <IconButton onClick={handlePlayPause} sx={{ color: '#ffffff', '&:hover': { color: '#e11d48' } }}>
+                    {isPlaying ? <PauseIcon fontSize="medium" /> : <PlayArrowIcon fontSize="medium" />}
+                  </IconButton>
+
+                  {onSelectNextChannel && (
+                    <IconButton onClick={onSelectNextChannel} sx={{ color: '#ffffff', '&:hover': { color: '#f97316' } }}>
+                      <SkipNextIcon fontSize="small" />
+                    </IconButton>
                   )}
+
+                  {/* Volume Slider with Hover */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: { xs: 80, sm: 130 } }}>
+                    <IconButton onClick={toggleMute} sx={{ color: '#ffffff', p: 0.5, '&:hover': { color: '#00e5ff' } }}>
+                      {isMuted || volume === 0 ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+                    </IconButton>
+                    <Slider
+                      size="small"
+                      value={isMuted ? 0 : volume}
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      onChange={handleVolumeChange}
+                      sx={{
+                        color: '#ffffff',
+                        height: 3,
+                        '& .MuiSlider-thumb': { width: 10, height: 10 },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Time & Live Indicator */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
+                    {isLiveStream ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                        <span className="live-dot" />
+                        <Typography variant="caption" sx={{ color: '#e11d48', fontWeight: 800, fontSize: '0.78rem' }}>
+                          LIVE
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 600, fontSize: '0.78rem' }}>
+                        {formatTime(currentTime)} / {formatTime(duration)}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+
+                {/* Right Controls: Settings, Stats, Theater, Fullscreen */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.3, sm: 1 } }}>
+                  {/* Stats for nerds toggle */}
+                  <Tooltip title="Stream Diagnostics HUD">
+                    <IconButton
+                      size="small"
+                      onClick={() => setShowStats(!showStats)}
+                      sx={{ color: showStats ? '#00e5ff' : '#9ca3af', '&:hover': { color: '#00e5ff' } }}
+                    >
+                      <AssessmentIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {/* Settings Gear */}
+                  <Tooltip title="Playback Settings">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        setSettingsAnchor(e.currentTarget);
+                        setActiveSubMenu('main');
+                      }}
+                      sx={{ color: '#ffffff', '&:hover': { color: '#f97316' } }}
+                    >
+                      <SettingsIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {/* Theater Mode */}
+                  <Tooltip title={isTheaterMode ? "Default View" : "Theater Mode"}>
+                    <IconButton
+                      size="small"
+                      onClick={onToggleTheaterMode}
+                      sx={{ color: isTheaterMode ? '#e11d48' : '#ffffff', display: { xs: 'none', md: 'inline-flex' } }}
+                    >
+                      <AspectRatioIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {/* Fullscreen */}
+                  <Tooltip title="Fullscreen">
+                    <IconButton size="small" onClick={toggleFullscreen} sx={{ color: '#ffffff', '&:hover': { color: '#00e5ff' } }}>
+                      {isFullscreen ? <FullscreenExitIcon fontSize="small" /> : <FullscreenIcon fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
                 </Box>
               </Box>
-
-              {/* Right Controls: Settings, Stats, Theater, Fullscreen */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.3, sm: 1 } }}>
-                {/* Stats for nerds toggle */}
-                <Tooltip title="Stream Diagnostics HUD">
-                  <IconButton
-                    size="small"
-                    onClick={() => setShowStats(!showStats)}
-                    sx={{ color: showStats ? '#00e5ff' : '#9ca3af', '&:hover': { color: '#00e5ff' } }}
-                  >
-                    <AssessmentIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-
-                {/* Settings Gear */}
-                <Tooltip title="Playback Settings">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      setSettingsAnchor(e.currentTarget);
-                      setActiveSubMenu('main');
-                    }}
-                    sx={{ color: '#ffffff', '&:hover': { color: '#f97316' } }}
-                  >
-                    <SettingsIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-
-                {/* Theater Mode */}
-                <Tooltip title={isTheaterMode ? "Default View" : "Theater Mode"}>
-                  <IconButton
-                    size="small"
-                    onClick={onToggleTheaterMode}
-                    sx={{ color: isTheaterMode ? '#e11d48' : '#ffffff', display: { xs: 'none', md: 'inline-flex' } }}
-                  >
-                    <AspectRatioIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-
-                {/* Fullscreen */}
-                <Tooltip title="Fullscreen">
-                  <IconButton size="small" onClick={toggleFullscreen} sx={{ color: '#ffffff', '&:hover': { color: '#00e5ff' } }}>
-                    {isFullscreen ? <FullscreenExitIcon fontSize="small" /> : <FullscreenIcon fontSize="small" />}
-                  </IconButton>
-                </Tooltip>
-              </Box>
             </Box>
-          </Box>
-        </Fade>
-        )}
+          </Fade>
 
         {/* Settings Popup Menu */}
         <Menu
