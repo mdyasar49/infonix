@@ -17,6 +17,11 @@ import {
   Fade,
   Avatar,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -46,6 +51,7 @@ import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import TvIcon from '@mui/icons-material/Tv';
 import MovieIcon from '@mui/icons-material/Movie';
+import LinkIcon from '@mui/icons-material/Link';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -94,6 +100,8 @@ export default function VideoPlayer({
   const [showStats, setShowStats] = useState(false);
   const [streamStats, setStreamStats] = useState({ resolution: '1080p FHD', bitrate: 4500, buffer: 5.2 });
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState(null);
+  const [isCustomStreamOpen, setIsCustomStreamOpen] = useState(false);
+  const [customUrlInput, setCustomUrlInput] = useState('');
 
   // Menu anchors
   const [settingsAnchor, setSettingsAnchor] = useState(null);
@@ -955,6 +963,28 @@ export default function VideoPlayer({
               Share
             </Button>
 
+            {/* Custom Stream Source / URL Pill */}
+            <Button
+              size="small"
+              startIcon={<LinkIcon />}
+              onClick={() => {
+                setCustomUrlInput(channel?.stream_url || '');
+                setIsCustomStreamOpen(true);
+              }}
+              sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.06)',
+                color: '#00e5ff',
+                borderRadius: 20,
+                px: 2,
+                border: '1px solid rgba(0, 229, 255, 0.25)',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 229, 255, 0.15)',
+                },
+              }}
+            >
+              Stream Source
+            </Button>
+
             {/* Reload Stream Pill */}
             <Button
               size="small"
@@ -973,7 +1003,7 @@ export default function VideoPlayer({
           </Box>
         </Box>
 
-        {/* 4. YouTube Expandable Description Card */}
+        {/* 4. Expandable Description Card */}
         <Paper
           onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
           sx={{
@@ -1046,6 +1076,144 @@ export default function VideoPlayer({
             {isDescriptionExpanded ? 'Show less' : '...more'}
           </Typography>
         </Paper>
+
+        {/* 5. Custom Direct Stream Source Dialog */}
+        <Dialog
+          open={isCustomStreamOpen}
+          onClose={() => setIsCustomStreamOpen(false)}
+          PaperProps={{
+            sx: {
+              bgcolor: '#0d0d10',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: 4,
+              p: 1.5,
+              maxWidth: 520,
+              width: '100%',
+              color: '#ffffff',
+            },
+          }}
+        >
+          <DialogTitle sx={{ fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LinkIcon sx={{ color: '#00e5ff' }} /> Custom Video Stream Source
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ color: '#9ca3af', mb: 2 }}>
+              Enter any direct MP4 / HLS (.m3u8) video stream URL, local media server link (Jellyfin/Plex), or cloud storage endpoint.
+            </Typography>
+
+            <TextField
+              fullWidth
+              autoFocus
+              variant="outlined"
+              label="Direct Video Stream URL (.m3u8 or .mp4)"
+              value={customUrlInput}
+              onChange={(e) => setCustomUrlInput(e.target.value)}
+              placeholder="https://your-server.com/stream.m3u8"
+              sx={{
+                mb: 2.5,
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  color: '#ffffff',
+                  borderRadius: 2.5,
+                  '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.15)' },
+                  '&:hover fieldset': { borderColor: '#00e5ff' },
+                  '&.Mui-focused fieldset': { borderColor: '#e11d48' },
+                },
+                '& .MuiInputLabel-root': { color: '#9ca3af' },
+              }}
+            />
+
+            <Typography variant="caption" sx={{ color: '#f97316', fontWeight: 700, display: 'block', mb: 1 }}>
+              QUICK HIGH-SPEED PRESETS:
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setCustomUrlInput('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8')}
+                sx={{
+                  justifyContent: 'flex-start',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  color: '#e2e8f0',
+                  textTransform: 'none',
+                  fontSize: '0.78rem',
+                  borderRadius: 2,
+                }}
+              >
+                ⚡ 1080p FHD Cinema Master Stream (HLS)
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setCustomUrlInput('https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8')}
+                sx={{
+                  justifyContent: 'flex-start',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  color: '#e2e8f0',
+                  textTransform: 'none',
+                  fontSize: '0.78rem',
+                  borderRadius: 2,
+                }}
+              >
+                🌐 Akamai Adaptive Multi-Bitrate Feed (HLS)
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setCustomUrlInput('https://archive.org/download/VeerapandiyaKattabomman_201703/VeerapandiyaKattabomman.mp4')}
+                sx={{
+                  justifyContent: 'flex-start',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  color: '#e2e8f0',
+                  textTransform: 'none',
+                  fontSize: '0.78rem',
+                  borderRadius: 2,
+                }}
+              >
+                🏛️ Internet Archive Cinema Stream (MP4)
+              </Button>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={() => setIsCustomStreamOpen(false)}
+              sx={{ color: '#9ca3af', fontWeight: 600 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={async () => {
+                const target = customUrlInput.trim();
+                if (!target) return;
+                initStream(target);
+                setIsCustomStreamOpen(false);
+
+                if (channel?.id && channel.id.toString().startsWith('movie_')) {
+                  const movieId = channel.id.toString().replace('movie_', '');
+                  try {
+                    await fetch(`${API_BASE}/movies/${movieId}/`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ stream_url: target }),
+                    });
+                  } catch (err) {
+                    console.error('Failed to persist stream url:', err);
+                  }
+                }
+              }}
+              sx={{
+                background: 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
+                color: '#ffffff',
+                fontWeight: 700,
+                borderRadius: 20,
+                px: 3,
+              }}
+            >
+              Apply & Play Now
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );

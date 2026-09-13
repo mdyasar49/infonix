@@ -208,6 +208,24 @@ class MovieDetailView(APIView):
         except Movie.DoesNotExist:
             return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
 
+    def patch(self, request, pk):
+        try:
+            movie = Movie.objects.get(pk=pk)
+            stream_url = request.data.get('stream_url')
+            if stream_url:
+                movie.stream_url = stream_url.strip()
+            poster_url = request.data.get('poster_url')
+            if poster_url:
+                movie.poster_url = poster_url.strip()
+            movie.save()
+            serializer = MovieSerializer(movie)
+            return Response(serializer.data)
+        except Movie.DoesNotExist:
+            return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request, pk):
+        return self.patch(request, pk)
+
 from .stream_shield import generate_stream_ticket, decode_stream_ticket, rewrite_hls_manifest
 
 class MovieStreamShieldView(APIView):
