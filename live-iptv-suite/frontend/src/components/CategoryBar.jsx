@@ -33,10 +33,8 @@ export default function CategoryBar({
     );
   }
 
-  const allLanguagesList = [
-    { language: 'all', count: totalChannels, label: 'All Languages' },
-    ...languages,
-  ];
+  // Direct list of specific languages without redundant 'All Languages' chip
+  const languageList = languages || [];
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -162,7 +160,7 @@ export default function CategoryBar({
           </Typography>
         </Box>
 
-        {allLanguagesList.map((langObj) => {
+        {languageList.map((langObj) => {
           const lCode = (langObj.language || '').toLowerCase();
           const isSelected = selectedLanguage.toLowerCase() === lCode;
           const label = langObj.label || langObj.language;
@@ -173,7 +171,7 @@ export default function CategoryBar({
               label={`${label.toUpperCase()} (${langObj.count || 0})`}
               size="small"
               clickable
-              onClick={() => onSelectLanguage(lCode)}
+              onClick={() => onSelectLanguage(isSelected ? 'all' : lCode)}
               sx={{
                 height: 24,
                 fontSize: '0.68rem',

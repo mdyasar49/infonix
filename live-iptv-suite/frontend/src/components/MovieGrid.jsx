@@ -183,33 +183,27 @@ export default function MovieGrid({
             Language:
           </Typography>
           <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', py: 0.3, '&::-webkit-scrollbar': { display: 'none' } }}>
-            <Chip
-              label={`All Languages (${movies.length})`}
-              size="small"
-              clickable
-              onClick={() => { setSelectedLanguage('all'); setCurrentPage(1); }}
-              sx={{
-                bgcolor: selectedLanguage === 'all' ? 'linear-gradient(135deg, #f97316, #e11d48)' : 'rgba(255, 255, 255, 0.06)',
-                color: '#ffffff',
-                fontWeight: selectedLanguage === 'all' ? 800 : 500,
-                border: selectedLanguage === 'all' ? '1px solid #e11d48' : '1px solid rgba(255, 255, 255, 0.08)',
-              }}
-            />
             {availableLanguages.map((lang) => {
               const count = movies.filter((m) => m.language === lang).length;
-              const isSelected = selectedLanguage === lang;
+              const isSelected = selectedLanguage.toLowerCase() === lang.toLowerCase();
               return (
                 <Chip
                   key={lang}
-                  label={`${lang} (${count})`}
+                  label={`${lang.toUpperCase()} (${count})`}
                   size="small"
                   clickable
-                  onClick={() => { setSelectedLanguage(lang); setCurrentPage(1); }}
+                  onClick={() => {
+                    setSelectedLanguage(isSelected ? 'all' : lang);
+                    setCurrentPage(1);
+                  }}
                   sx={{
-                    bgcolor: isSelected ? '#e11d48' : 'rgba(255, 255, 255, 0.06)',
+                    bgcolor: isSelected ? 'linear-gradient(135deg, #f97316, #e11d48)' : 'rgba(255, 255, 255, 0.06)',
                     color: '#ffffff',
                     fontWeight: isSelected ? 800 : 500,
                     border: isSelected ? '1px solid #f43f5e' : '1px solid rgba(255, 255, 255, 0.08)',
+                    '&:hover': {
+                      bgcolor: isSelected ? 'linear-gradient(135deg, #fb923c, #f43f5e)' : 'rgba(255, 255, 255, 0.12)',
+                    },
                   }}
                 />
               );
