@@ -31,7 +31,7 @@ export default function Sidebar({
   setActiveTab,
   selectedCategory = 'all',
   onSelectCategory,
-  selectedLanguage = 'all',
+  selectedLanguage = 'tamil',
   onSelectLanguage,
   showFavoritesOnly = false,
   setShowFavoritesOnly,

@@ -24,7 +24,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('live'); // 'live' or 'movies'
   const [languages, setLanguages] = useState([]);
-  const [selectedLanguage, setSelectedLanguage] = useState('all');
+  const [selectedLanguage, setSelectedLanguage] = useState('tamil');
   const [categories, setCategories] = useState([]);
   const [channels, setChannels] = useState([]);
   const [movies, setMovies] = useState([]);

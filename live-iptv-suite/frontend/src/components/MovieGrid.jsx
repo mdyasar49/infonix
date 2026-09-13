@@ -39,7 +39,7 @@ export default function MovieGrid({
   onSyncMovies,
   syncing = false,
 }) {
-  const [selectedLanguage, setSelectedLanguage] = useState('all');
+  const [selectedLanguage, setSelectedLanguage] = useState('tamil');
   const [selectedEra, setSelectedEra] = useState('all');
   const [exactYear, setExactYear] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');

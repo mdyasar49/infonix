@@ -6,7 +6,7 @@ import TranslateIcon from '@mui/icons-material/Translate';
 
 export default function CategoryBar({
   languages = [],
-  selectedLanguage = 'all',
+  selectedLanguage = 'tamil',
   onSelectLanguage,
   categories = [],
   selectedCategory = 'all',
