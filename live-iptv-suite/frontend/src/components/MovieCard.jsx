@@ -44,13 +44,14 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
       <Box sx={{ position: 'relative', width: '100%', pt: '135%', overflow: 'hidden', bgcolor: '#07070a' }}>
         <CardMedia
           component="img"
-          image={movie.poster_url || 'https://m.media-amazon.com/images/M/MV5BMmFiZGZjMmEtMTA0Ni00MzA2LTljMTYtZGI2MGJmZWYzZTQ2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg'}
+          image={movie.poster_url || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="100%" height="100%" fill="%230d0d12"/><text x="50%" y="45%" fill="%23f97316" font-size="28" font-weight="bold" font-family="sans-serif" text-anchor="middle">🎬 CINEMA</text><text x="50%" y="55%" fill="%23ffffff" font-size="18" font-family="sans-serif" text-anchor="middle">${encodeURIComponent(movie.title || 'Movie')}</text></svg>`}
           alt={movie.title}
           className="movie-poster"
           loading="lazy"
+          referrerPolicy="no-referrer"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = 'https://m.media-amazon.com/images/M/MV5BMmFiZGZjMmEtMTA0Ni00MzA2LTljMTYtZGI2MGJmZWYzZTQ2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg';
+            e.target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="100%" height="100%" fill="%230d0d12"/><text x="50%" y="45%" fill="%23f97316" font-size="28" font-weight="bold" font-family="sans-serif" text-anchor="middle">🎬 CINEMA</text><text x="50%" y="55%" fill="%23ffffff" font-size="18" font-family="sans-serif" text-anchor="middle">${encodeURIComponent(movie.title || 'Movie')}</text></svg>`;
           }}
           sx={{
             position: 'absolute',

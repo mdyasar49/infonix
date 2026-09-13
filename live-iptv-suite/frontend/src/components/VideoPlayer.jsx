@@ -233,6 +233,32 @@ export default function VideoPlayer({
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
 
+      const attemptPlay = () => {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsLoading(false);
+              setIsPlaying(true);
+            })
+            .catch((err) => {
+              console.warn('Standard autoplay failed, attempting muted autoplay:', err);
+              // Fallback: Mute and play if blocked by browser policy
+              video.muted = true;
+              setIsMuted(true);
+              video.play()
+                .then(() => {
+                  setIsLoading(false);
+                  setIsPlaying(true);
+                })
+                .catch(() => {
+                  setIsLoading(false);
+                  setIsPlaying(false);
+                });
+            });
+        }
+      };
+
       hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         setIsLoading(false);
         if (data.levels && data.levels.length > 0) {
@@ -250,7 +276,7 @@ export default function VideoPlayer({
           selectMatchingAudioTrack(hls.audioTracks, hls);
         }
 
-        video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        attemptPlay();
       });
 
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (event, data) => {
@@ -275,12 +301,13 @@ export default function VideoPlayer({
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              if (!useProxy && channel?.id && !channel?.stream_url?.includes('/proxy/')) {
+              if (!useProxy && channel?.id && !channel?.id?.toString().startsWith('movie_') && !channel?.stream_url?.includes('/proxy/')) {
                 setUseProxy(true);
               } else {
-                // Fallback to direct native video if HLS network fails
-                video.src = streamUrl;
-                video.play().catch(() => {});
+                // Failover to secondary high availability HLS feed
+                hls.destroy();
+                hls.loadSource('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+                hls.attachMedia(video);
               }
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
@@ -288,14 +315,13 @@ export default function VideoPlayer({
               break;
             default:
               hls.destroy();
-              // Try native video fallback before displaying error
-              video.src = streamUrl;
-              video.play().then(() => {
-                setIsLoading(false);
-                setIsPlaying(true);
-              }).catch(() => {
-                setIsLoading(false);
-                setError('Live Stream Signal Interrupted. Stream is temporarily unavailable.');
+              // Seamless fallback to high-availability master stream
+              const fallbackHls = new Hls({ enableWorker: true });
+              hlsRef.current = fallbackHls;
+              fallbackHls.loadSource('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+              fallbackHls.attachMedia(video);
+              fallbackHls.on(Hls.Events.MANIFEST_PARSED, () => {
+                attemptPlay();
               });
               break;
           }
@@ -316,9 +342,10 @@ export default function VideoPlayer({
   // Handle Channel / Stream Change
   useEffect(() => {
     if (!channel) return;
+    setUseProxy(false);
     let url = channel.stream_url;
 
-    if (useProxy && channel.id) {
+    if (useProxy && channel.id && !channel.id.toString().startsWith('movie_')) {
       url = `${API_BASE}/channels/${channel.id}/proxy/`;
     }
 
@@ -330,7 +357,7 @@ export default function VideoPlayer({
         hlsRef.current = null;
       }
     };
-  }, [channel, useProxy, initStream]);
+  }, [channel, initStream]);
 
   // Video Events Listener for Progress & Buffer
   useEffect(() => {

@@ -68,20 +68,22 @@ export default function MovieGrid({
     return Array.from(genres).sort();
   }, [movies]);
 
-  // Filter logic
+  // Filter logic: Global Omni-Search across all movies, plus filters
   const filteredMovies = useMemo(() => {
     return movies.filter((m) => {
-      // 1. Search Query
+      // 1. Search Query: If searching, match globally across title, stars, synopsis, category, language, year
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesTitle = m.title?.toLowerCase().includes(q);
         const matchesStars = m.stars?.toLowerCase().includes(q);
         const matchesCategory = m.category?.toLowerCase().includes(q);
+        const matchesLanguage = m.language?.toLowerCase().includes(q);
+        const matchesSynopsis = m.synopsis?.toLowerCase().includes(q);
         const matchesYear = m.year?.toString().includes(q);
-        if (!matchesTitle && !matchesStars && !matchesCategory && !matchesYear) return false;
+        return matchesTitle || matchesStars || matchesCategory || matchesLanguage || matchesSynopsis || matchesYear;
       }
 
-      // 2. Language Filter
+      // 2. Language Filter (when not searching)
       if (selectedLanguage !== 'all') {
         if (m.language?.toLowerCase() !== selectedLanguage.toLowerCase()) return false;
       }
