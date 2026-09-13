@@ -44,13 +44,13 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
       <Box sx={{ position: 'relative', width: '100%', pt: '135%', overflow: 'hidden', bgcolor: '#07070a' }}>
         <CardMedia
           component="img"
-          image={movie.poster_url || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80'}
+          image={movie.poster_url || 'https://m.media-amazon.com/images/M/MV5BMmFiZGZjMmEtMTA0Ni00MzA2LTljMTYtZGI2MGJmZWYzZTQ2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg'}
           alt={movie.title}
           className="movie-poster"
           loading="lazy"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80';
+            e.target.src = 'https://m.media-amazon.com/images/M/MV5BMmFiZGZjMmEtMTA0Ni00MzA2LTljMTYtZGI2MGJmZWYzZTQ2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg';
           }}
           sx={{
             position: 'absolute',

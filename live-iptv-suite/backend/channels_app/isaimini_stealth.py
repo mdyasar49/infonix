@@ -788,6 +788,13 @@ def sync_all_universal_movies():
             m.save(update_fields=['source_mirror'])
             total_updated += 1
 
+    # 7. Apply Cinema VOD stream verification & high quality poster normalization
+    try:
+        from rebuild_cinema_vod import rebuild_catalog
+        rebuild_catalog()
+    except Exception as e:
+        print("rebuild_catalog warning:", e)
+
     total_count = Movie.objects.count()
     print(f"\nUniversal Sync Complete! Added: {total_added}, Updated: {total_updated}. Total in DB: {total_count}")
     return {

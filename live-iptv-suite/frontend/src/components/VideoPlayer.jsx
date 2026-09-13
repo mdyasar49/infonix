@@ -156,7 +156,7 @@ export default function VideoPlayer({
     }
   }, [channel?.language]);
 
-  // Main Stream Initializer
+  // Main Stream Initializer (Supports both Direct MP4/WebM and HLS Streams)
   const initStream = useCallback((streamUrl) => {
     if (!videoRef.current || !streamUrl) return;
 
@@ -175,7 +175,46 @@ export default function VideoPlayer({
     const video = videoRef.current;
     video.volume = isMuted ? 0 : volume;
 
-    if (Hls.isSupported()) {
+    // Check if the stream is a direct video file (MP4, WebM, OGV, or Direct VOD)
+    const isDirectVideo =
+      streamUrl.toLowerCase().includes('.mp4') ||
+      streamUrl.toLowerCase().includes('.webm') ||
+      streamUrl.toLowerCase().includes('.ogg') ||
+      streamUrl.toLowerCase().includes('.mov') ||
+      streamUrl.startsWith('blob:') ||
+      (!streamUrl.includes('.m3u8') && !streamUrl.includes('/hls/') && !streamUrl.includes('/live/') && !streamUrl.includes('/proxy/'));
+
+    if (isDirectVideo) {
+      // Direct Native Video Playback for Movies & VOD
+      video.removeAttribute('crossorigin');
+      video.src = streamUrl;
+      video.load();
+
+      const onCanPlay = () => {
+        setIsLoading(false);
+        setStreamStats({
+          resolution: channel?.quality || '1080p FHD',
+          bitrate: 4800,
+          buffer: 10.0,
+        });
+        video.play().then(() => setIsPlaying(true)).catch((err) => {
+          console.warn('Autoplay prevented or paused:', err);
+          setIsPlaying(false);
+        });
+        video.removeEventListener('canplay', onCanPlay);
+      };
+
+      const onError = (e) => {
+        console.warn('Native video playback error:', e);
+        setIsLoading(false);
+        setError('Video stream is temporarily unavailable. Please try another title.');
+        video.removeEventListener('error', onError);
+      };
+
+      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener('error', onError);
+    } else if (Hls.isSupported()) {
+      // Adaptive Bitrate HLS Stream Playback for Live TV
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
@@ -239,7 +278,9 @@ export default function VideoPlayer({
               if (!useProxy && channel?.id && !channel?.stream_url?.includes('/proxy/')) {
                 setUseProxy(true);
               } else {
-                hls.startLoad();
+                // Fallback to direct native video if HLS network fails
+                video.src = streamUrl;
+                video.play().catch(() => {});
               }
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
@@ -247,8 +288,15 @@ export default function VideoPlayer({
               break;
             default:
               hls.destroy();
-              setIsLoading(false);
-              setError('Live Stream Signal Interrupted. Stream is temporarily unavailable.');
+              // Try native video fallback before displaying error
+              video.src = streamUrl;
+              video.play().then(() => {
+                setIsLoading(false);
+                setIsPlaying(true);
+              }).catch(() => {
+                setIsLoading(false);
+                setError('Live Stream Signal Interrupted. Stream is temporarily unavailable.');
+              });
               break;
           }
         }
@@ -260,8 +308,8 @@ export default function VideoPlayer({
         video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
       });
     } else {
-      setError('HLS playback is not supported in this browser.');
-      setIsLoading(false);
+      video.src = streamUrl;
+      video.play().catch(() => {});
     }
   }, [channel, isMuted, volume, useProxy, selectMatchingAudioTrack]);
 
