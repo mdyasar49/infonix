@@ -1,7 +1,7 @@
-import sys
-sys.path.append(r'd:\infonix\live-iptv-suite\backend')
-import os, django
-
+import os, sys, django
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.append(backend_dir)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iptv_backend.settings')
 django.setup()
 

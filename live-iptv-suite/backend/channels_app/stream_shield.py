@@ -10,7 +10,7 @@ import urllib.request
 from django.conf import settings
 
 # Shared Secret Key for Opaque Ticket Encryption
-SHIELD_KEY = getattr(settings, 'SECRET_KEY', 'infonix-stream-shield-secret-token-key').encode('utf-8')
+SHIELD_KEY = getattr(settings, 'SECRET_KEY', 'streampulse-stream-shield-secret-token-key').encode('utf-8')
 
 def generate_stream_ticket(url, referer='', extra_headers=None, expiry_seconds=86400):
     """

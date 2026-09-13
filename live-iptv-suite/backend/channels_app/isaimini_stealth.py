@@ -804,7 +804,9 @@ def sync_all_universal_movies():
     }
 
 if __name__ == '__main__':
-    sys.path.append(r'd:\infonix\live-iptv-suite\backend')
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if backend_dir not in sys.path:
+        sys.path.append(backend_dir)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iptv_backend.settings')
     import django
     django.setup()
