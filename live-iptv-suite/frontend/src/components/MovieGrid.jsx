@@ -7,10 +7,17 @@ import {
   Skeleton,
   Button,
   TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import MovieIcon from '@mui/icons-material/Movie';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SyncIcon from '@mui/icons-material/Sync';
+import StorageIcon from '@mui/icons-material/Storage';
 import MovieCard from './MovieCard';
 import LanguagePills from './common/LanguagePills';
 import ScrollableChipsRail from './common/ScrollableChipsRail';
@@ -43,6 +50,14 @@ export default function MovieGrid({
   const [exactYear, setExactYear] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Local Media Server / Jellyfin integration state
+  const [isMediaServerOpen, setIsMediaServerOpen] = useState(false);
+  const [serverUrl, setServerUrl] = useState('http://localhost:8096');
+  const [apiKey, setApiKey] = useState('');
+  const [serverConnecting, setServerConnecting] = useState(false);
+  const [serverMsg, setServerMsg] = useState(null);
+  const [serverError, setServerError] = useState(null);
 
   // Available Languages with Counts
   const availableLanguagesWithCounts = useMemo(() => {
@@ -165,23 +180,46 @@ export default function MovieGrid({
             </Typography>
           </Box>
 
-          <Button
-            size="small"
-            variant="contained"
-            onClick={onSyncMovies}
-            disabled={syncing}
-            startIcon={<SyncIcon className={syncing ? 'animate-spin' : ''} />}
-            sx={{
-              background: 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              borderRadius: 20,
-              px: 2,
-            }}
-          >
-            {syncing ? 'Syncing Catalog...' : 'Sync Movie Sources'}
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setIsMediaServerOpen(true)}
+              startIcon={<StorageIcon />}
+              sx={{
+                borderColor: 'rgba(0, 229, 255, 0.4)',
+                color: '#00e5ff',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                borderRadius: 20,
+                px: 2,
+                '&:hover': {
+                  borderColor: '#00e5ff',
+                  bgcolor: 'rgba(0, 229, 255, 0.1)',
+                },
+              }}
+            >
+              Connect Media Server
+            </Button>
+
+            <Button
+              size="small"
+              variant="contained"
+              onClick={onSyncMovies}
+              disabled={syncing}
+              startIcon={<SyncIcon className={syncing ? 'animate-spin' : ''} />}
+              sx={{
+                background: 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                borderRadius: 20,
+                px: 2,
+              }}
+            >
+              {syncing ? 'Syncing Catalog...' : 'Sync Movie Sources'}
+            </Button>
+          </Box>
         </Box>
 
         {/* Row 1: Reusable Language Filter Pills */}
@@ -316,6 +354,132 @@ export default function MovieGrid({
           />
         </>
       )}
+
+      {/* 3. Connect Media Server (Jellyfin / Emby / Plex / Local Folder) Dialog */}
+      <Dialog
+        open={isMediaServerOpen}
+        onClose={() => setIsMediaServerOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: '#0d0d10',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: 4,
+            p: 1.5,
+            maxWidth: 520,
+            width: '100%',
+            color: '#ffffff',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <StorageIcon sx={{ color: '#00e5ff' }} /> Connect Local Media Server / Jellyfin
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#9ca3af', mb: 2 }}>
+            Connect your local Jellyfin, Emby, or Plex media server to stream your personal movie collection directly in StreamPulse with zero external dependencies.
+          </Typography>
+
+          {serverMsg && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{serverMsg}</Alert>}
+          {serverError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{serverError}</Alert>}
+
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="Media Server URL"
+            value={serverUrl}
+            onChange={(e) => setServerUrl(e.target.value)}
+            placeholder="http://localhost:8096 or http://192.168.1.100:8096"
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                color: '#ffffff',
+                borderRadius: 2.5,
+                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.15)' },
+                '&:hover fieldset': { borderColor: '#00e5ff' },
+                '&.Mui-focused fieldset': { borderColor: '#e11d48' },
+              },
+              '& .MuiInputLabel-root': { color: '#9ca3af' },
+            }}
+          />
+
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="API Key / Access Token (Optional)"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Enter Jellyfin API Key if enabled"
+            sx={{
+              mb: 2.5,
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                color: '#ffffff',
+                borderRadius: 2.5,
+                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.15)' },
+                '&:hover fieldset': { borderColor: '#00e5ff' },
+                '&.Mui-focused fieldset': { borderColor: '#e11d48' },
+              },
+              '& .MuiInputLabel-root': { color: '#9ca3af' },
+            }}
+          />
+
+          <Typography variant="caption" sx={{ color: '#f97316', fontWeight: 700, display: 'block', mb: 1 }}>
+            LOCAL NETWORK QUICK DISCOVERY:
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Chip
+              label="Localhost (:8096)"
+              clickable
+              onClick={() => setServerUrl('http://localhost:8096')}
+              sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff' }}
+            />
+            <Chip
+              label="Local LAN (:8096)"
+              clickable
+              onClick={() => setServerUrl('http://192.168.1.100:8096')}
+              sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff' }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setIsMediaServerOpen(false)}
+            sx={{ color: '#9ca3af', fontWeight: 600 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={serverConnecting}
+            onClick={async () => {
+              setServerConnecting(true);
+              setServerMsg(null);
+              setServerError(null);
+              try {
+                const { connectJellyfinServer } = await import('../services/jellyfinService');
+                const info = await connectJellyfinServer(serverUrl, apiKey);
+                setServerMsg(`Successfully connected to ${info.serverName}! Server is online.`);
+                setTimeout(() => setIsMediaServerOpen(false), 2000);
+              } catch (err) {
+                setServerError(err.message || 'Failed to connect to Media Server');
+              } finally {
+                setServerConnecting(false);
+              }
+            }}
+            startIcon={serverConnecting ? <CircularProgress size={16} color="inherit" /> : <StorageIcon />}
+            sx={{
+              background: 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
+              color: '#ffffff',
+              fontWeight: 700,
+              borderRadius: 20,
+              px: 3,
+            }}
+          >
+            {serverConnecting ? 'Testing Connection...' : 'Connect Server'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
