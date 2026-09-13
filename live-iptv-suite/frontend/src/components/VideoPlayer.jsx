@@ -52,6 +52,7 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import TvIcon from '@mui/icons-material/Tv';
 import MovieIcon from '@mui/icons-material/Movie';
 import LinkIcon from '@mui/icons-material/Link';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -69,6 +70,7 @@ export default function VideoPlayer({
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const hlsRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -488,10 +490,19 @@ export default function VideoPlayer({
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 1. Main 16:9 YouTube Video Container */}
+      {/* 1. Main 16:9 Cinema Video Container with Drag-and-Drop */}
       <Box
         ref={containerRef}
         onMouseMove={() => setShowControls(true)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files?.[0];
+          if (file) {
+            const localUrl = URL.createObjectURL(file);
+            initStream(localUrl);
+          }
+        }}
         sx={{
           position: 'relative',
           width: '100%',
@@ -983,6 +994,38 @@ export default function VideoPlayer({
               }}
             >
               Stream Source
+            </Button>
+
+            {/* Play Local Video File Pill */}
+            <input
+              type="file"
+              accept="video/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const localUrl = URL.createObjectURL(file);
+                  initStream(localUrl);
+                }
+              }}
+            />
+            <Button
+              size="small"
+              startIcon={<FolderOpenIcon />}
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.06)',
+                color: '#f97316',
+                borderRadius: 20,
+                px: 2,
+                border: '1px solid rgba(249, 115, 22, 0.3)',
+                '&:hover': {
+                  bgcolor: 'rgba(249, 115, 22, 0.15)',
+                },
+              }}
+            >
+              Play Local File
             </Button>
 
             {/* Reload Stream Pill */}
