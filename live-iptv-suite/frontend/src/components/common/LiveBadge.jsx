@@ -19,18 +19,47 @@ export default function LiveBadge({ size = 'medium', sx = {} }) {
         fontSize: isSmall ? '0.62rem' : '0.68rem',
         letterSpacing: '0.5px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+        userSelect: 'none',
         ...sx,
       }}
     >
-      <span
-        className="live-dot"
-        style={{
+      {/* 100% MUI Animated Pulsing Dot */}
+      <Box
+        component="span"
+        sx={{
           width: isSmall ? 5 : 6,
           height: isSmall ? 5 : 6,
-          backgroundColor: '#ffffff',
+          bgcolor: '#ffffff',
+          borderRadius: '50%',
+          display: 'inline-block',
+          animation: 'mui-pulse-live 1.8s infinite',
+          '@keyframes mui-pulse-live': {
+            '0%': {
+              transform: 'scale(0.95)',
+              boxShadow: '0 0 0 0 rgba(255, 255, 255, 0.8)',
+            },
+            '70%': {
+              transform: 'scale(1)',
+              boxShadow: '0 0 0 6px rgba(255, 255, 255, 0)',
+            },
+            '100%': {
+              transform: 'scale(0.95)',
+              boxShadow: '0 0 0 0 rgba(255, 255, 255, 0)',
+            },
+          },
         }}
       />
-      <span>LIVE</span>
+      <Typography
+        component="span"
+        sx={{
+          fontWeight: 800,
+          fontSize: 'inherit',
+          letterSpacing: 'inherit',
+          lineHeight: 1,
+        }}
+      >
+        LIVE
+      </Typography>
     </Box>
   );
 }
