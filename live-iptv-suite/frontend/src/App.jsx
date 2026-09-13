@@ -15,6 +15,7 @@ import Sidebar from './components/Sidebar';
 import CategoryBar from './components/CategoryBar';
 import VideoPlayer from './components/VideoPlayer';
 import RelatedVideosRail from './components/RelatedVideosRail';
+import MobileBottomNav from './components/common/MobileBottomNav';
 import ChannelGrid from './components/ChannelGrid';
 import MovieGrid from './components/MovieGrid';
 
@@ -399,6 +400,7 @@ export default function App() {
           sx={{
             flexGrow: 1,
             p: { xs: 1.5, sm: 2.5, md: 3 },
+            pb: { xs: 9, sm: 3 },
             maxWidth: isTheaterMode ? '100%' : '1800px',
             mx: 'auto',
             width: '100%',
@@ -524,12 +526,26 @@ export default function App() {
         </Box>
       </Box>
 
+      {/* Mobile Bottom Navigation Bar */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        showFavoritesOnly={showFavoritesOnly}
+        setShowFavoritesOnly={setShowFavoritesOnly}
+        favoritesCount={favorites.length}
+        onSearchFocus={() => {
+          const searchInput = document.querySelector('input[aria-label="search stream"]');
+          if (searchInput) searchInput.focus();
+        }}
+      />
+
       {/* Toast Notification */}
       <Snackbar
         open={notification.open}
         autoHideDuration={3000}
         onClose={() => setNotification((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        sx={{ mb: { xs: 7, sm: 0 } }}
       >
         <Alert
           severity={notification.severity}

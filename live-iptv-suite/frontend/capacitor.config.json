@@ -1,0 +1,29 @@
+{
+  "appId": "com.infonix.streampulse",
+  "appName": "StreamPulse",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#050507",
+      "overlaysWebView": false
+    },
+    "ScreenOrientation": {
+      "autoRotate": true
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK",
+      "resizeOnFullScreen": true
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}
