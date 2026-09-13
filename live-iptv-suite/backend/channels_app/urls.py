@@ -13,11 +13,13 @@ from .views import (
     ChannelStreamShieldView,
     StreamTicketShieldView,
     StreamProxyView,
-    HealthCheckView
+    HealthCheckView,
+    JioAirtelAutoConnectorView
 )
 
 urlpatterns = [
     path('health/', HealthCheckView.as_view(), name='health_check'),
+    path('connectors/auto-extract/', JioAirtelAutoConnectorView.as_view(), name='auto_extract_connectors'),
     path('languages/', LanguageListView.as_view(), name='language_list'),
     path('categories/', CategoryListView.as_view(), name='category_list'),
     path('channels/', ChannelListView.as_view(), name='channel_list'),

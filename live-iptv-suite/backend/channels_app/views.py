@@ -558,3 +558,129 @@ class HealthCheckView(APIView):
             'movies_count': total_movies
         })
 
+
+def parse_m3u_text_helper(text):
+    import re
+    items = []
+    lines = text.split('\n')
+    current = {}
+    for line in lines:
+        line = line.strip()
+        if line.startswith('#EXTINF:'):
+            name_match = re.search(r',(.+)$', line)
+            logo_match = re.search(r'tvg-logo="([^"]+)"', line)
+            group_match = re.search(r'group-title="([^"]+)"', line)
+            lang_match = re.search(r'tvg-language="([^"]+)"', line)
+            
+            name = name_match.group(1).strip() if name_match else "Live Channel"
+            logo = logo_match.group(1) if logo_match else None
+            cat = group_match.group(1) if group_match else "Live TV"
+            lang = lang_match.group(1) if lang_match else "Tamil"
+            
+            current = {
+                'name': name,
+                'logo': logo or 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=200&h=200&fit=crop',
+                'category': cat,
+                'language': lang,
+            }
+        elif line.startswith('http://') or line.startswith('https://'):
+            if current and 'name' in current:
+                current['url'] = line
+                items.append(current)
+                current = {}
+    return items
+
+
+class JioAirtelAutoConnectorView(APIView):
+    """
+    Automated JioTV / Airtel / Indian IPTV Stream Connector
+    Scans local proxy ports (http://127.0.0.1:5000/playlist.m3u) and public stream repos,
+    extracts channels, and populates the SQLite database.
+    """
+    def post(self, request):
+        extracted_count = 0
+        sources_checked = []
+        
+        # 1. Check local JioTV proxy
+        jio_urls = [
+            "http://127.0.0.1:5000/playlist.m3u",
+            "http://localhost:5000/playlist.m3u",
+            "http://127.0.0.1:8080/playlist.m3u",
+        ]
+        
+        for url in jio_urls:
+            try:
+                req = urllib.request.Request(url, headers={'User-Agent': 'StreamPulse/1.0'})
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                with urllib.request.urlopen(req, timeout=3, context=ctx) as response:
+                    content = response.read().decode('utf-8', errors='ignore')
+                    if '#EXTINF' in content:
+                        parsed = parse_m3u_text_helper(content)
+                        sources_checked.append({'source': url, 'status': 'connected', 'count': len(parsed)})
+                        from django.utils.text import slugify
+                        for item in parsed:
+                            cat_name = item.get('category') or 'JioTV Live'
+                            c_slug = slugify(cat_name) or 'jiotv-live'
+                            cat, _ = Category.objects.get_or_create(
+                                slug=c_slug,
+                                defaults={'name': cat_name, 'icon': 'Tv', 'order': 1}
+                            )
+                            Channel.objects.update_or_create(
+                                logo_url=item['logo'],
+                                defaults={
+                                    'name': item['name'],
+                                    'stream_url': item['url'],
+                                    'category': cat,
+                                    'language': item.get('language', 'Tamil'),
+                                    'is_active': True,
+                                }
+                            )
+                            extracted_count += 1
+                        break
+            except Exception as e:
+                sources_checked.append({'source': url, 'status': 'not_running', 'error': str(e)})
+
+        # 2. Check public Indian IPTV live channels (Tamil, Hindi, English)
+        public_iptv_url = "https://iptv-org.github.io/iptv/countries/in.m3u"
+        try:
+            req = urllib.request.Request(public_iptv_url, headers={'User-Agent': 'Mozilla/5.0'})
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            with urllib.request.urlopen(req, timeout=5, context=ctx) as resp:
+                text = resp.read().decode('utf-8', errors='ignore')
+                if '#EXTINF' in text:
+                    parsed_pub = parse_m3u_text_helper(text)
+                    sources_checked.append({'source': public_iptv_url, 'status': 'connected', 'count': len(parsed_pub)})
+                    from django.utils.text import slugify
+                    for item in parsed_pub[:60]:
+                        cat_name = item.get('category') or 'General Entertainment'
+                        c_slug = slugify(cat_name) or 'general-ent'
+                        cat, _ = Category.objects.get_or_create(
+                            slug=c_slug,
+                            defaults={'name': cat_name, 'icon': 'Tv', 'order': 2}
+                        )
+                        Channel.objects.get_or_create(
+                            stream_url=item['url'],
+                            defaults={
+                                'name': item['name'],
+                                'logo_url': item['logo'],
+                                'category': cat,
+                                'language': item.get('language', 'Tamil'),
+                                'is_active': True,
+                            }
+                        )
+                        extracted_count += 1
+        except Exception as e:
+            sources_checked.append({'source': public_iptv_url, 'status': 'failed', 'error': str(e)})
+
+        return Response({
+            'status': 'success',
+            'extracted_channels': extracted_count,
+            'sources_checked': sources_checked,
+            'message': f"Successfully extracted & synced {extracted_count} live channels into StreamPulse!"
+        })
+
+
