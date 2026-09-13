@@ -81,6 +81,7 @@ export default function Navbar({
   onRefresh,
   wsConnected,
   onWsPing,
+  onOpenJioModal,
 }) {
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -238,9 +239,27 @@ export default function Navbar({
                 borderRadius: 20,
                 backgroundColor: activeTab === 'movies' ? '#f97316' : 'transparent',
                 color: activeTab === 'movies' ? '#fff' : '#9ca3af',
-                '&:hover': { backgroundColor: activeTab === 'movies' ? '#fb923c' : 'rgba(255, 255, 255, 0.08)' },
+                '&:hover': { backgroundColor: activeTab === 'movies' ? '#ea580c' : 'rgba(255, 255, 255, 0.08)' },
               }}
             />
+            {onOpenJioModal && (
+              <Chip
+                label="📱 JioTV OTP"
+                size="small"
+                onClick={onOpenJioModal}
+                clickable
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  height: 28,
+                  borderRadius: 20,
+                  ml: 0.5,
+                  background: 'linear-gradient(135deg, #00e5ff 0%, #0284c7 100%)',
+                  color: '#ffffff',
+                  '&:hover': { boxShadow: '0 0 12px rgba(0, 229, 255, 0.5)' },
+                }}
+              />
+            )}
           </Box>
 
           {/* WebSocket Realtime Status */}

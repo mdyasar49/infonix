@@ -16,10 +16,13 @@ from .views import (
     HealthCheckView,
     JioAirtelAutoConnectorView
 )
+from .jiotv_auth import JioTvSendOtpView, JioTvVerifyOtpView
 
 urlpatterns = [
     path('health/', HealthCheckView.as_view(), name='health_check'),
     path('connectors/auto-extract/', JioAirtelAutoConnectorView.as_view(), name='auto_extract_connectors'),
+    path('connectors/jiotv/send-otp/', JioTvSendOtpView.as_view(), name='jiotv_send_otp'),
+    path('connectors/jiotv/verify-otp/', JioTvVerifyOtpView.as_view(), name='jiotv_verify_otp'),
     path('languages/', LanguageListView.as_view(), name='language_list'),
     path('categories/', CategoryListView.as_view(), name='category_list'),
     path('channels/', ChannelListView.as_view(), name='channel_list'),

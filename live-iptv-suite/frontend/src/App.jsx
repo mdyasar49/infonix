@@ -18,11 +18,14 @@ import RelatedVideosRail from './components/RelatedVideosRail';
 import MobileBottomNav from './components/common/MobileBottomNav';
 import ChannelGrid from './components/ChannelGrid';
 import MovieGrid from './components/MovieGrid';
+import JioTvLoginModal from './components/JioTvLoginModal';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_HOST = typeof window !== 'undefined' ? (window.location.hostname || '127.0.0.1') : '127.0.0.1';
+const API_BASE = `http://${API_HOST}:8000/api`;
 
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isJioModalOpen, setIsJioModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('live'); // 'live' or 'movies'
   const [languages, setLanguages] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState('tamil');
