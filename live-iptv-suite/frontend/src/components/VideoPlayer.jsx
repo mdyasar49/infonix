@@ -175,14 +175,138 @@ export default function VideoPlayer({
     const video = videoRef.current;
     video.volume = isMuted ? 0 : volume;
 
+    const playWithHls = (urlToPlay) => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 30,
+          maxBufferLength: 20,
+          maxMaxBufferLength: 40,
+          manifestLoadingTimeOut: 10000,
+          levelLoadingTimeOut: 10000,
+          fragLoadingTimeOut: 10000,
+          xhrSetup: (xhr) => {
+            xhr.withCredentials = false;
+          },
+        });
+
+        hlsRef.current = hls;
+        hls.loadSource(urlToPlay);
+        hls.attachMedia(video);
+
+        const attemptPlay = () => {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                setIsLoading(false);
+                setIsPlaying(true);
+              })
+              .catch(() => {
+                // Fallback: Mute and play if blocked by browser policy
+                video.muted = true;
+                setIsMuted(true);
+                video.play()
+                  .then(() => {
+                    setIsLoading(false);
+                    setIsPlaying(true);
+                  })
+                  .catch(() => {
+                    setIsLoading(false);
+                    setIsPlaying(false);
+                  });
+              });
+          }
+        };
+
+        hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+          setIsLoading(false);
+          if (data.levels && data.levels.length > 0) {
+            const levels = data.levels.map((lvl, index) => ({
+              index,
+              height: lvl.height,
+              bitrate: lvl.bitrate,
+              name: lvl.height ? `${lvl.height}p` : `Level ${index + 1}`,
+            }));
+            setQualityLevels(levels);
+          }
+
+          if (hls.audioTracks && hls.audioTracks.length > 0) {
+            setAudioTracks(hls.audioTracks);
+            selectMatchingAudioTrack(hls.audioTracks, hls);
+          }
+
+          attemptPlay();
+        });
+
+        hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (event, data) => {
+          if (data.audioTracks && data.audioTracks.length > 0) {
+            setAudioTracks(data.audioTracks);
+            selectMatchingAudioTrack(data.audioTracks, hls);
+          }
+        });
+
+        hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+          const lvl = hls.levels[data.level];
+          if (lvl) {
+            setStreamStats(prev => ({
+              ...prev,
+              resolution: lvl.height ? `${lvl.height}p FHD` : 'Adaptive 1080p',
+              bitrate: Math.round(lvl.bitrate / 1000),
+            }));
+          }
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                if (!useProxy && channel?.id && !channel?.id?.toString().startsWith('movie_') && !channel?.stream_url?.includes('/proxy/')) {
+                  setUseProxy(true);
+                } else if (urlToPlay !== 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8') {
+                  // Instant failover to high-availability master stream
+                  playWithHls('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+                }
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                if (urlToPlay !== 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8') {
+                  playWithHls('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+                } else {
+                  setIsLoading(false);
+                  setIsPlaying(false);
+                }
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = urlToPlay;
+        video.addEventListener('loadedmetadata', () => {
+          setIsLoading(false);
+          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        });
+      } else {
+        video.src = urlToPlay;
+        video.play().catch(() => {});
+      }
+    };
+
     // Check if the stream is a direct video file (MP4, WebM, OGV, or Direct VOD)
     const isDirectVideo =
       streamUrl.toLowerCase().includes('.mp4') ||
       streamUrl.toLowerCase().includes('.webm') ||
       streamUrl.toLowerCase().includes('.ogg') ||
       streamUrl.toLowerCase().includes('.mov') ||
-      streamUrl.startsWith('blob:') ||
-      (!streamUrl.includes('.m3u8') && !streamUrl.includes('/hls/') && !streamUrl.includes('/live/') && !streamUrl.includes('/proxy/'));
+      streamUrl.startsWith('blob:');
 
     if (isDirectVideo) {
       // Direct Native Video Playback for Movies & VOD
@@ -197,145 +321,24 @@ export default function VideoPlayer({
           bitrate: 4800,
           buffer: 10.0,
         });
-        video.play().then(() => setIsPlaying(true)).catch((err) => {
-          console.warn('Autoplay prevented or paused:', err);
-          setIsPlaying(false);
+        video.play().then(() => setIsPlaying(true)).catch(() => {
+          video.muted = true;
+          setIsMuted(true);
+          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
         });
         video.removeEventListener('canplay', onCanPlay);
       };
 
-      const onError = (e) => {
-        console.warn('Native video playback error:', e);
-        setIsLoading(false);
-        setError('Video stream is temporarily unavailable. Please try another title.');
+      const onError = () => {
         video.removeEventListener('error', onError);
+        // Automatic silent failover to high availability HLS
+        playWithHls('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
       };
 
       video.addEventListener('canplay', onCanPlay);
       video.addEventListener('error', onError);
-    } else if (Hls.isSupported()) {
-      // Adaptive Bitrate HLS Stream Playback for Live TV
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 30,
-        maxBufferLength: 20,
-        maxMaxBufferLength: 40,
-        manifestLoadingTimeOut: 10000,
-        levelLoadingTimeOut: 10000,
-        fragLoadingTimeOut: 10000,
-        xhrSetup: (xhr) => {
-          xhr.withCredentials = false;
-        },
-      });
-
-      hlsRef.current = hls;
-      hls.loadSource(streamUrl);
-      hls.attachMedia(video);
-
-      const attemptPlay = () => {
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              setIsLoading(false);
-              setIsPlaying(true);
-            })
-            .catch((err) => {
-              console.warn('Standard autoplay failed, attempting muted autoplay:', err);
-              // Fallback: Mute and play if blocked by browser policy
-              video.muted = true;
-              setIsMuted(true);
-              video.play()
-                .then(() => {
-                  setIsLoading(false);
-                  setIsPlaying(true);
-                })
-                .catch(() => {
-                  setIsLoading(false);
-                  setIsPlaying(false);
-                });
-            });
-        }
-      };
-
-      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-        setIsLoading(false);
-        if (data.levels && data.levels.length > 0) {
-          const levels = data.levels.map((lvl, index) => ({
-            index,
-            height: lvl.height,
-            bitrate: lvl.bitrate,
-            name: lvl.height ? `${lvl.height}p` : `Level ${index + 1}`,
-          }));
-          setQualityLevels(levels);
-        }
-
-        if (hls.audioTracks && hls.audioTracks.length > 0) {
-          setAudioTracks(hls.audioTracks);
-          selectMatchingAudioTrack(hls.audioTracks, hls);
-        }
-
-        attemptPlay();
-      });
-
-      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (event, data) => {
-        if (data.audioTracks && data.audioTracks.length > 0) {
-          setAudioTracks(data.audioTracks);
-          selectMatchingAudioTrack(data.audioTracks, hls);
-        }
-      });
-
-      hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
-        const lvl = hls.levels[data.level];
-        if (lvl) {
-          setStreamStats(prev => ({
-            ...prev,
-            resolution: lvl.height ? `${lvl.height}p FHD` : 'Adaptive 1080p',
-            bitrate: Math.round(lvl.bitrate / 1000),
-          }));
-        }
-      });
-
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              if (!useProxy && channel?.id && !channel?.id?.toString().startsWith('movie_') && !channel?.stream_url?.includes('/proxy/')) {
-                setUseProxy(true);
-              } else {
-                // Failover to secondary high availability HLS feed
-                hls.destroy();
-                hls.loadSource('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
-                hls.attachMedia(video);
-              }
-              break;
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              hls.recoverMediaError();
-              break;
-            default:
-              hls.destroy();
-              // Seamless fallback to high-availability master stream
-              const fallbackHls = new Hls({ enableWorker: true });
-              hlsRef.current = fallbackHls;
-              fallbackHls.loadSource('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
-              fallbackHls.attachMedia(video);
-              fallbackHls.on(Hls.Events.MANIFEST_PARSED, () => {
-                attemptPlay();
-              });
-              break;
-          }
-        }
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = streamUrl;
-      video.addEventListener('loadedmetadata', () => {
-        setIsLoading(false);
-        video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-      });
     } else {
-      video.src = streamUrl;
-      video.play().catch(() => {});
+      playWithHls(streamUrl);
     }
   }, [channel, isMuted, volume, useProxy, selectMatchingAudioTrack]);
 

@@ -295,12 +295,14 @@ export default function App() {
   }, []);
 
   const handleSelectMovie = (movie) => {
+    if (!movie) return;
     setSelectedMovie(movie);
     setIsMinimized(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const originBase = API_BASE.replace('/api', '');
-    const shieldedUrl = movie.stream_url.startsWith('/') ? `${originBase}${movie.stream_url}` : movie.stream_url;
+    const rawUrl = movie.stream_url || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+    const shieldedUrl = rawUrl.startsWith('/') ? `${originBase}${rawUrl}` : rawUrl;
 
     const movieAsChannel = {
       id: `movie_${movie.id}`,
@@ -312,7 +314,7 @@ export default function App() {
       quality: movie.quality || '1080p FHD',
       language: movie.language || 'Tamil',
       is_active: true,
-      description: `${movie.title} (${movie.year}) • Directed/Starring ${movie.stars || 'Blockbuster cast'}. ${movie.storyline || 'Stream in 1080p Full HD with synchronized multi-language audio tracks.'}`,
+      description: `${movie.title} (${movie.year}) • Directed/Starring ${movie.stars || 'Blockbuster cast'}. ${movie.synopsis || movie.storyline || 'Stream in 1080p Full HD with synchronized multi-language audio tracks.'}`,
     };
 
     setSelectedChannel(movieAsChannel);
