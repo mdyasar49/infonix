@@ -18,6 +18,7 @@ import MovieIcon from '@mui/icons-material/Movie';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SyncIcon from '@mui/icons-material/Sync';
 import StorageIcon from '@mui/icons-material/Storage';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 import MovieCard from './MovieCard';
 import LanguagePills from './common/LanguagePills';
 import ScrollableChipsRail from './common/ScrollableChipsRail';
@@ -59,6 +60,10 @@ export default function MovieGrid({
   const [serverMsg, setServerMsg] = useState(null);
   const [serverError, setServerError] = useState(null);
 
+  // M3U Playlist import state
+  const [importedM3uMovies, setImportedM3uMovies] = useState([]);
+  const m3uFileInputRef = React.useRef(null);
+
   // Available Languages with Counts
   const availableLanguagesWithCounts = useMemo(() => {
     const langMap = {};
@@ -83,9 +88,14 @@ export default function MovieGrid({
     return Array.from(genres).sort();
   }, [movies]);
 
+  // Combined Movies (Database + Imported M3U Playlist Items)
+  const combinedMovies = useMemo(() => {
+    return [...importedM3uMovies, ...movies];
+  }, [importedM3uMovies, movies]);
+
   // Filter logic: Global Omni-Search across all movies, plus filters
   const filteredMovies = useMemo(() => {
-    return movies.filter((m) => {
+    return combinedMovies.filter((m) => {
       // 1. Search Query: If searching, match globally across title, stars, synopsis, category, language, year
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
@@ -181,6 +191,58 @@ export default function MovieGrid({
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <input
+              type="file"
+              accept=".m3u,.m3u8,.txt"
+              ref={m3uFileInputRef}
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = async (evt) => {
+                    const text = evt.target.result;
+                    const { parseM3uPlaylist } = await import('../services/m3uParser');
+                    const parsed = parseM3uPlaylist(text);
+                    if (parsed && parsed.length > 0) {
+                      setImportedM3uMovies((prev) => [...parsed, ...prev]);
+                    }
+                  };
+                  reader.readAsText(file);
+                }
+              }}
+            />
+            <Button
+              size="small"
+              variant="contained"
+              onClick={async () => {
+                try {
+                  const { fetchM3uFromUrl } = await import('../services/presetService');
+                  const items = await fetchM3uFromUrl('http://localhost:5000/playlist.m3u');
+                  if (items && items.length > 0) {
+                    setImportedM3uMovies((prev) => [...items, ...prev]);
+                    alert(`✅ Successfully imported ${items.length} JioTV channels/movies from local server!`);
+                  }
+                } catch (err) {
+                  m3uFileInputRef.current && m3uFileInputRef.current.click();
+                }
+              }}
+              startIcon={<FileUploadIcon />}
+              sx={{
+                background: 'linear-gradient(135deg, #00e5ff 0%, #0284c7 100%)',
+                color: '#ffffff',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                borderRadius: 20,
+                px: 2,
+                '&:hover': {
+                  boxShadow: '0 0 15px rgba(0, 229, 255, 0.4)',
+                },
+              }}
+            >
+              🚀 Auto-Import JioTV / M3U
+            </Button>
+
             <Button
               size="small"
               variant="outlined"
