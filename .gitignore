@@ -20,15 +20,3 @@ Thumbs.db
 # Inner git repo backups
 **/.git_repo/
 .git_repo/
-
-# Database
-*.sqlite3
-**/db.sqlite3
-
-# Environment / secrets
-**/.env.local
-
-# IDE
-.idea/
-.vscode/
-*.swp

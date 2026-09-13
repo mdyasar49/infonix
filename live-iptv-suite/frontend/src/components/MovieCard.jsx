@@ -2,7 +2,6 @@ import React, { memo } from 'react';
 import {
   Card,
   CardMedia,
-  CardContent,
   Typography,
   Box,
   Chip,
@@ -19,31 +18,31 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
       onClick={() => onSelectMovie(movie)}
       sx={{
         position: 'relative',
-        borderRadius: 3,
+        borderRadius: 3.5,
         overflow: 'hidden',
         cursor: 'pointer',
-        backgroundColor: '#131b2e',
-        border: isSelected ? '2px solid #06b6d4' : '1px solid rgba(255, 255, 255, 0.08)',
+        bgcolor: '#0d0d10',
+        border: isSelected ? '2px solid #e11d48' : '1px solid rgba(255, 255, 255, 0.08)',
         boxShadow: isSelected
-          ? '0 0 20px rgba(6, 182, 212, 0.45)'
-          : '0 4px 14px rgba(0, 0, 0, 0.4)',
-        transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+          ? '0 0 24px rgba(225, 29, 72, 0.45)'
+          : '0 4px 16px rgba(0, 0, 0, 0.5)',
+        transition: 'all 0.25s cubic-bezier(0.2, 0, 0, 1)',
         '&:hover': {
-          transform: 'translateY(-6px)',
-          boxShadow: '0 12px 28px rgba(0, 0, 0, 0.7), 0 0 16px rgba(6, 182, 212, 0.3)',
-          borderColor: '#38bdf8',
+          transform: 'translateY(-5px)',
+          boxShadow: '0 12px 30px rgba(0, 0, 0, 0.8), 0 0 18px rgba(249, 115, 22, 0.3)',
+          borderColor: '#f97316',
           '& .movie-play-btn': {
             opacity: 1,
             transform: 'scale(1)',
           },
           '& .movie-poster': {
-            transform: 'scale(1.06)',
+            transform: 'scale(1.05)',
           },
         },
       }}
     >
-      {/* Poster Container */}
-      <Box sx={{ position: 'relative', width: '100%', pt: '145%', overflow: 'hidden', bgcolor: '#0b0f19' }}>
+      {/* Poster Container (16:9 or Vertical Poster) */}
+      <Box sx={{ position: 'relative', width: '100%', pt: '135%', overflow: 'hidden', bgcolor: '#07070a' }}>
         <CardMedia
           component="img"
           image={movie.poster_url || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80'}
@@ -61,11 +60,11 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            transition: 'transform 0.4s ease',
+            transition: 'transform 0.35s ease',
           }}
         />
 
-        {/* Top Badges */}
+        {/* Top Badges (Year + Language + Rating) */}
         <Box
           sx={{
             position: 'absolute',
@@ -83,16 +82,16 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
               label={movie.year >= 2027 ? `🔮 ${movie.year}` : movie.year < 1950 ? `🏛️ ${movie.year}` : movie.year}
               size="small"
               sx={{
-                backgroundColor: movie.year >= 2027
-                  ? '#ec4899'
+                background: movie.year >= 2027
+                  ? 'linear-gradient(135deg, #c026d3 0%, #e11d48 100%)'
                   : movie.year < 1950
                   ? '#d97706'
-                  : 'rgba(6, 182, 212, 0.9)',
-                color: '#fff',
+                  : 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
+                color: '#ffffff',
                 fontWeight: 800,
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 height: 22,
-                boxShadow: movie.year >= 2027 ? '0 0 10px rgba(236, 72, 153, 0.6)' : 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
               }}
             />
             {movie.language && (
@@ -100,122 +99,137 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
                 label={movie.language}
                 size="small"
                 sx={{
-                  backgroundColor: movie.language.includes('Dubbed')
-                    ? 'rgba(168, 85, 247, 0.85)'
-                    : movie.language.includes('English')
-                    ? 'rgba(234, 179, 8, 0.85)'
-                    : movie.language.includes('Hindi')
-                    ? 'rgba(249, 115, 22, 0.85)'
-                    : 'rgba(59, 130, 246, 0.85)',
-                  color: '#fff',
+                  bgcolor: 'rgba(0, 0, 0, 0.75)',
+                  color: '#00e5ff',
                   fontWeight: 700,
-                  fontSize: '0.66rem',
-                  height: 20,
+                  fontSize: '0.68rem',
+                  height: 22,
+                  border: '1px solid rgba(0, 229, 255, 0.4)',
+                  backdropFilter: 'blur(4px)',
                 }}
               />
             )}
           </Box>
 
+          {/* Rating */}
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
-              gap: 0.3,
-              backgroundColor: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(6px)',
+              gap: 0.4,
+              bgcolor: 'rgba(0, 0, 0, 0.75)',
               px: 0.8,
               py: 0.3,
-              borderRadius: 2,
-              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: 1.5,
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(4px)',
             }}
           >
-            <StarIcon sx={{ color: '#eab308', fontSize: 13 }} />
-            <Typography variant="caption" sx={{ color: '#fef08a', fontWeight: 700, fontSize: '0.72rem' }}>
-              {movie.rating}
+            <StarIcon sx={{ color: '#f59e0b', fontSize: 14 }} />
+            <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 800, fontSize: '0.72rem' }}>
+              {movie.rating ? Number(movie.rating).toFixed(1) : '9.0'}
             </Typography>
           </Box>
         </Box>
 
-        {/* Hover Overlay Play Button */}
+        {/* Hover Center Play Button */}
         <Box
           className="movie-play-btn"
           sx={{
             position: 'absolute',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.45)',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) scale(0.8)',
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
             display: 'flex',
-            justifyContent: 'center',
             alignItems: 'center',
+            justifyContent: 'center',
             opacity: 0,
-            transform: 'scale(0.8)',
-            transition: 'all 0.25s ease',
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: '0 0 25px rgba(225, 29, 72, 0.7)',
             zIndex: 3,
           }}
         >
-          <IconButton
-            sx={{
-              backgroundColor: 'rgba(6, 182, 212, 0.95)',
-              color: '#000',
-              width: 50,
-              height: 50,
-              boxShadow: '0 0 20px rgba(6, 182, 212, 0.6)',
-              '&:hover': {
-                backgroundColor: '#38bdf8',
-                transform: 'scale(1.1)',
-              },
-            }}
-          >
-            <PlayArrowIcon sx={{ fontSize: 32 }} />
-          </IconButton>
+          <PlayArrowIcon sx={{ color: '#ffffff', fontSize: 32, ml: 0.3 }} />
         </Box>
 
-        {/* Bottom Gradient */}
+        {/* Bottom Poster Gradient & Duration */}
         <Box
           sx={{
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
-            height: '40%',
-            background: 'linear-gradient(to top, #131b2e 0%, transparent 100%)',
-            zIndex: 1,
+            p: 1,
+            background: 'linear-gradient(to top, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.4) 60%, transparent 100%)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            zIndex: 2,
           }}
-        />
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(0,0,0,0.7)', px: 0.8, py: 0.2, borderRadius: 1 }}>
+            <HdIcon sx={{ color: '#00e5ff', fontSize: 16 }} />
+            <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 700, fontSize: '0.68rem' }}>
+              {movie.quality || '1080p'}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, bgcolor: 'rgba(0,0,0,0.7)', px: 0.8, py: 0.2, borderRadius: 1 }}>
+            <AccessTimeIcon sx={{ color: '#f97316', fontSize: 13 }} />
+            <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 700, fontSize: '0.68rem' }}>
+              {movie.duration_display || '2h 15m'}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
-      {/* Movie Details */}
-      <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
+      {/* Card Info Content */}
+      <Box sx={{ p: 1.6, bgcolor: '#0d0d10' }}>
         <Typography
-          variant="subtitle2"
-          noWrap
+          variant="subtitle1"
           sx={{
-            fontWeight: 700,
-            color: isSelected ? '#38bdf8' : '#f8fafc',
-            fontSize: '0.9rem',
-            mb: 0.5,
+            fontWeight: 800,
+            color: isSelected ? '#e11d48' : '#ffffff',
+            fontSize: '0.94rem',
+            lineHeight: 1.25,
+            mb: 0.4,
+            display: '-webkit-box',
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
           }}
         >
           {movie.title}
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8' }}>
-          <Typography variant="caption" noWrap sx={{ maxWidth: '65%', fontSize: '0.72rem' }}>
-            {movie.category}
-          </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: '#9ca3af',
+            fontSize: '0.78rem',
+            display: '-webkit-box',
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            mb: 0.8,
+          }}
+        >
+          {movie.category || 'Cinema'} • {movie.stars || 'Blockbuster'}
+        </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-            <AccessTimeIcon sx={{ fontSize: 11, color: '#64748b' }} />
-            <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
-              {movie.duration}
-            </Typography>
-          </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="caption" sx={{ color: '#00e5ff', fontWeight: 700, fontSize: '0.72rem' }}>
+            ▶ STREAM NOW
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
+            STEALTH VOD
+          </Typography>
         </Box>
-      </CardContent>
+      </Box>
     </Card>
-  );
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.movie.id === nextProps.movie.id &&
-    prevProps.isSelected === nextProps.isSelected
   );
 });

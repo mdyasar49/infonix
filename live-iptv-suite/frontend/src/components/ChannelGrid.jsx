@@ -1,69 +1,88 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Grid, Box, Typography, Skeleton, Pagination, Chip } from '@mui/material';
+import React, { useState, useMemo } from 'react';
+import { Grid, Box, Typography, Skeleton, Pagination } from '@mui/material';
 import TvOffIcon from '@mui/icons-material/TvOff';
 import ChannelCard from './ChannelCard';
 
-const CHANNELS_PER_PAGE = 48; // 4 cols x 12 rows - sweet spot for performance
+const ITEMS_PER_PAGE = 48;
 
 export default function ChannelGrid({
-  channels,
+  channels = [],
   selectedChannel,
   onSelectChannel,
-  favorites,
+  favorites = [],
   onToggleFavorite,
-  loading,
+  loading = false,
 }) {
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset page when channels list changes (language/category filter)
-  const channelKey = useMemo(() => channels.map(c => c.id).join(',').slice(0, 100), [channels]);
-  React.useEffect(() => { setPage(1); }, [channelKey]);
+  const totalPages = Math.ceil(channels.length / ITEMS_PER_PAGE);
 
-  const totalPages = Math.ceil(channels.length / CHANNELS_PER_PAGE);
   const paginatedChannels = useMemo(() => {
-    const start = (page - 1) * CHANNELS_PER_PAGE;
-    return channels.slice(start, start + CHANNELS_PER_PAGE);
-  }, [channels, page]);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return channels.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [channels, currentPage]);
 
-  const handlePageChange = useCallback((event, value) => {
-    setPage(value);
-    window.scrollTo({ top: 280, behavior: 'smooth' });
-  }, []);
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (loading) {
     return (
       <Grid container spacing={2.5}>
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={item}>
-            <Skeleton
-              variant="rounded"
-              height={140}
-              sx={{ borderRadius: 4, backgroundColor: 'rgba(30, 41, 59, 0.4)' }}
-            />
+        {Array.from(new Array(12)).map((_, index) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+            <Box sx={{ bgcolor: '#0d0d10', borderRadius: 3.5, overflow: 'hidden', p: 0 }}>
+              <Skeleton variant="rectangular" width="100%" sx={{ pt: '56.25%', bgcolor: 'rgba(255, 255, 255, 0.04)' }} />
+              <Box sx={{ p: 2, display: 'flex', gap: 1.5 }}>
+                <Skeleton variant="circular" width={36} height={36} sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)' }} />
+                <Box sx={{ flexGrow: 1 }}>
+                  <Skeleton width="80%" height={20} sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', mb: 0.5 }} />
+                  <Skeleton width="50%" height={16} sx={{ bgcolor: 'rgba(255, 255, 255, 0.04)' }} />
+                </Box>
+              </Box>
+            </Box>
           </Grid>
         ))}
       </Grid>
     );
   }
 
-  if (!channels || channels.length === 0) {
+  if (channels.length === 0) {
     return (
       <Box
         sx={{
-          py: 8,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          py: 8,
+          px: 3,
           textAlign: 'center',
+          bgcolor: '#0d0d10',
+          borderRadius: 4,
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        <TvOffIcon sx={{ fontSize: 60, color: '#475569', mb: 2 }} />
-        <Typography variant="h6" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+        <Box
+          sx={{
+            width: 70,
+            height: 70,
+            borderRadius: '50%',
+            bgcolor: 'rgba(225, 29, 72, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 2,
+          }}
+        >
+          <TvOffIcon sx={{ fontSize: 36, color: '#e11d48' }} />
+        </Box>
+        <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 700, mb: 1 }}>
           No Channels Found
         </Typography>
-        <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
-          Try clearing search keywords or selecting another category.
+        <Typography variant="body2" sx={{ color: '#9ca3af', maxWidth: 420 }}>
+          Try clearing your search query or selecting a different language / genre category.
         </Typography>
       </Box>
     );
@@ -71,70 +90,63 @@ export default function ChannelGrid({
 
   return (
     <Box>
-      {/* Page info + quick stats */}
-      {totalPages > 1 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-          <Chip
-            label={`Page ${page} of ${totalPages} • Showing ${paginatedChannels.length} of ${channels.length}`}
-            size="small"
-            sx={{
-              backgroundColor: 'rgba(30, 41, 59, 0.6)',
-              color: '#94a3b8',
-              fontSize: '0.72rem',
-              fontWeight: 600,
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-            }}
-          />
-        </Box>
-      )}
-
       <Grid container spacing={2.5}>
-        {paginatedChannels.map((ch) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={ch.id}>
+        {paginatedChannels.map((channel) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={channel.id}>
             <ChannelCard
-              channel={ch}
-              isSelected={selectedChannel && selectedChannel.id === ch.id}
+              channel={channel}
+              isSelected={selectedChannel?.id === channel.id}
               onSelect={onSelectChannel}
-              isFavorite={favorites.includes(ch.id)}
+              isFavorite={favorites.includes(channel.id)}
               onToggleFavorite={onToggleFavorite}
             />
           </Grid>
         ))}
       </Grid>
 
-      {/* Pagination Controls */}
+      {/* YouTube-style Pagination Bar */}
       {totalPages > 1 && (
         <Box
           sx={{
             display: 'flex',
-            justifyContent: 'center',
-            mt: 3,
-            mb: 1,
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mt: 4,
+            mb: 3,
+            p: 2,
+            bgcolor: '#0d0d10',
+            borderRadius: 3,
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            gap: 2,
           }}
         >
+          <Typography variant="body2" sx={{ color: '#9ca3af', fontWeight: 600 }}>
+            Page <span style={{ color: '#ffffff', fontWeight: 800 }}>{currentPage}</span> of{' '}
+            <span style={{ color: '#ffffff', fontWeight: 800 }}>{totalPages}</span> • Showing {paginatedChannels.length} of {channels.length} channels
+          </Typography>
+
           <Pagination
             count={totalPages}
-            page={page}
+            page={currentPage}
             onChange={handlePageChange}
             color="primary"
-            size="large"
+            size="medium"
             showFirstButton
             showLastButton
             sx={{
               '& .MuiPaginationItem-root': {
-                color: '#94a3b8',
-                fontWeight: 600,
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                '&.Mui-selected': {
-                  backgroundColor: 'rgba(6, 182, 212, 0.9)',
-                  color: '#000',
-                  fontWeight: 800,
-                  '&:hover': {
-                    backgroundColor: '#0891b2',
-                  },
-                },
+                color: '#ffffff',
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                fontWeight: 700,
+                borderRadius: 2,
                 '&:hover': {
-                  backgroundColor: 'rgba(30, 41, 59, 0.8)',
+                  bgcolor: 'rgba(225, 29, 72, 0.25)',
+                },
+                '&.Mui-selected': {
+                  background: 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 10px rgba(225, 29, 72, 0.4)',
                 },
               },
             }}

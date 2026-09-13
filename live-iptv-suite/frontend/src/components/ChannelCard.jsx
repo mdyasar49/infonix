@@ -1,17 +1,18 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import {
   Card,
   CardActionArea,
-  CardContent,
   Box,
   Typography,
   Chip,
   IconButton,
   Tooltip,
+  Avatar,
 } from '@mui/material';
-import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TvIcon from '@mui/icons-material/Tv';
 
 export default memo(function ChannelCard({
@@ -21,40 +22,69 @@ export default memo(function ChannelCard({
   isFavorite,
   onToggleFavorite,
 }) {
-  const [imgError, setImgError] = React.useState(false);
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Card
       sx={{
         position: 'relative',
-        height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderColor: isSelected ? '#06b6d4' : 'rgba(255, 255, 255, 0.08)',
+        bgcolor: '#0d0d10',
+        border: isSelected ? '1px solid #e11d48' : '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 3.5,
+        overflow: 'hidden',
         boxShadow: isSelected
-          ? '0 0 20px rgba(6, 182, 212, 0.4), 0 8px 16px rgba(0,0,0,0.5)'
-          : '0 4px 12px rgba(0, 0, 0, 0.3)',
-        background: isSelected
-          ? 'linear-gradient(145deg, rgba(6, 182, 212, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%)'
-          : 'rgba(15, 23, 42, 0.65)',
-        transform: isSelected ? 'scale(1.02)' : 'none',
+          ? '0 0 24px rgba(225, 29, 72, 0.4), 0 8px 20px rgba(0, 0, 0, 0.8)'
+          : '0 4px 16px rgba(0, 0, 0, 0.4)',
+        transition: 'all 0.22s cubic-bezier(0.2, 0, 0, 1)',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          borderColor: 'rgba(249, 115, 22, 0.45)',
+          boxShadow: '0 12px 28px rgba(0, 0, 0, 0.8), 0 0 20px rgba(225, 29, 72, 0.25)',
+          '& .yt-play-overlay': {
+            opacity: 1,
+          },
+          '& .yt-thumb-logo': {
+            transform: 'scale(1.08)',
+          },
+        },
       }}
     >
-      <CardActionArea onClick={() => onSelect(channel)} sx={{ flexGrow: 1, p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          {/* Logo container */}
+      <CardActionArea
+        onClick={() => onSelect(channel)}
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          p: 0,
+        }}
+      >
+        {/* 1. YouTube 16:9 Thumbnail Area */}
+        <Box
+          sx={{
+            position: 'relative',
+            width: '100%',
+            pt: '56.25%', // 16:9 Aspect Ratio
+            bgcolor: '#14141a',
+            overflow: 'hidden',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          }}
+        >
+          {/* Logo / Thumbnail Content */}
           <Box
             sx={{
-              width: 56,
-              height: 56,
-              borderRadius: 3,
-              backgroundColor: channel.logo_url && !imgError ? 'rgba(255, 255, 255, 0.96)' : 'rgba(30, 41, 59, 0.8)',
-              p: channel.logo_url && !imgError ? 0.75 : 0,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              overflow: 'hidden',
+              p: 2,
+              background: 'radial-gradient(circle at 50% 50%, #1e1e28 0%, #0d0d12 100%)',
             }}
           >
             {channel.logo_url && !imgError ? (
@@ -64,63 +94,166 @@ export default memo(function ChannelCard({
                 alt={channel.name}
                 loading="lazy"
                 onError={() => setImgError(true)}
-                sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                className="yt-thumb-logo"
+                sx={{
+                  maxWidth: '70%',
+                  maxHeight: '65%',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.6))',
+                  transition: 'transform 0.3s ease',
+                }}
               />
             ) : (
-              <TvIcon sx={{ color: '#06b6d4', fontSize: 30 }} />
+              <TvIcon sx={{ color: '#e11d48', fontSize: 48 }} />
             )}
           </Box>
 
-          {/* Quality Chip */}
-          <Chip
-            label={channel.quality || 'HD'}
-            size="small"
+          {/* Hover Play Icon Overlay */}
+          <Box
+            className="yt-play-overlay"
             sx={{
-              backgroundColor: 'rgba(6, 182, 212, 0.15)',
-              color: '#38bdf8',
-              fontSize: '0.68rem',
-              fontWeight: 700,
-              height: 22,
-              borderRadius: 1.5,
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-            }}
-          />
-        </Box>
-
-        <CardContent sx={{ p: 0 }}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 700,
-              color: isSelected ? '#38bdf8' : '#f8fafc',
-              fontSize: '0.98rem',
-              lineHeight: 1.25,
-              mb: 0.5,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              bgcolor: 'rgba(0, 0, 0, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0,
+              transition: 'opacity 0.2s ease',
             }}
           >
-            {channel.name}
-          </Typography>
+            <Box
+              sx={{
+                width: 46,
+                height: 46,
+                borderRadius: '50%',
+                bgcolor: 'rgba(225, 29, 72, 0.95)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(225, 29, 72, 0.6)',
+              }}
+            >
+              <PlayArrowIcon sx={{ color: '#ffffff', fontSize: 30, ml: 0.3 }} />
+            </Box>
+          </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-            <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 500 }}>
-              {channel.category_name}
+          {/* Top Left Quality Chip */}
+          <Chip
+            label={channel.quality || 'FHD'}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              height: 20,
+              fontSize: '0.65rem',
+              fontWeight: 800,
+              bgcolor: 'rgba(0, 0, 0, 0.75)',
+              color: '#00e5ff',
+              border: '1px solid rgba(0, 229, 255, 0.4)',
+              backdropFilter: 'blur(4px)',
+            }}
+          />
+
+          {/* Bottom Right YouTube LIVE Badge */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 8,
+              right: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.6,
+              bgcolor: 'rgba(225, 29, 72, 0.9)',
+              color: '#ffffff',
+              px: 1,
+              py: 0.3,
+              borderRadius: 1,
+              fontWeight: 800,
+              fontSize: '0.68rem',
+              letterSpacing: '0.5px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            <span className="live-dot" style={{ width: 6, height: 6, backgroundColor: '#ffffff' }} />
+            <span>LIVE</span>
+          </Box>
+        </Box>
+
+        {/* 2. YouTube Video Info Section */}
+        <Box sx={{ p: 1.8, display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+          {/* Channel Avatar Circle */}
+          <Avatar
+            src={channel.logo_url && !imgError ? channel.logo_url : undefined}
+            sx={{
+              width: 36,
+              height: 36,
+              bgcolor: '#1a1a24',
+              border: isSelected ? '2px solid #e11d48' : '1px solid rgba(255, 255, 255, 0.15)',
+              p: 0.4,
+              flexShrink: 0,
+            }}
+          >
+            <TvIcon sx={{ fontSize: 18, color: '#e11d48' }} />
+          </Avatar>
+
+          {/* Titles & Metadata */}
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                color: isSelected ? '#e11d48' : '#ffffff',
+                fontSize: '0.92rem',
+                lineHeight: 1.3,
+                mb: 0.4,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {channel.name}
             </Typography>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
-              <span className="live-dot" />
-              <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 700, fontSize: '0.7rem' }}>
-                LIVE
+            {/* Channel Name & Verified Badge */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.4 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#9ca3af',
+                  fontSize: '0.78rem',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {channel.category_name || 'Entertainment'}
+              </Typography>
+              <CheckCircleIcon sx={{ fontSize: 14, color: '#00e5ff' }} />
+            </Box>
+
+            {/* Language & Stream Details */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.72rem', fontWeight: 600 }}>
+                {channel.language?.toUpperCase() || 'TAMIL'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#4b5563' }}>•</Typography>
+              <Typography variant="caption" sx={{ color: '#10b981', fontSize: '0.72rem', fontWeight: 700 }}>
+                100% ONLINE
               </Typography>
             </Box>
           </Box>
-        </CardContent>
+        </Box>
       </CardActionArea>
 
-      {/* Favorite button absolute positioned */}
-      <Tooltip title={isFavorite ? "Remove favorite" : "Save favorite"}>
+      {/* Favorite Heart Button */}
+      <Tooltip title={isFavorite ? "Remove from subscriptions" : "Subscribe / Save to favorites"}>
         <IconButton
           size="small"
           onClick={(e) => {
@@ -131,11 +264,13 @@ export default memo(function ChannelCard({
             position: 'absolute',
             top: 8,
             right: 8,
-            color: isFavorite ? '#ef4444' : 'rgba(255, 255, 255, 0.3)',
-            backgroundColor: 'rgba(0, 0, 0, 0.25)',
+            zIndex: 3,
+            color: isFavorite ? '#e11d48' : 'rgba(255, 255, 255, 0.6)',
+            bgcolor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
             '&:hover': {
-              color: '#ef4444',
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              color: '#e11d48',
+              bgcolor: 'rgba(0, 0, 0, 0.85)',
             },
           }}
         >
@@ -145,11 +280,11 @@ export default memo(function ChannelCard({
     </Card>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparator: only re-render if these specific props change
   return (
     prevProps.channel.id === nextProps.channel.id &&
     prevProps.isSelected === nextProps.isSelected &&
-    prevProps.isFavorite === nextProps.isFavorite
+    prevProps.isFavorite === nextProps.isFavorite &&
+    prevProps.channel.name === nextProps.channel.name &&
+    prevProps.channel.stream_url === nextProps.channel.stream_url
   );
 });
-

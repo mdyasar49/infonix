@@ -1,3 +1,21 @@
+:root {
+  --brand-bg: #050507;
+  --brand-surface: #0d0d10;
+  --brand-surface-elevated: #14141a;
+  --brand-surface-card: #111116;
+  --brand-primary: #e11d48;
+  --brand-primary-hover: #f43f5e;
+  --brand-orange: #f97316;
+  --brand-purple: #c026d3;
+  --brand-accent: #00e5ff;
+  --brand-cyan: #38bdf8;
+  --brand-gradient: linear-gradient(135deg, #f97316 0%, #e11d48 50%, #c026d3 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #fb923c 0%, #f43f5e 50%, #d946ef 100%);
+  --brand-border: rgba(255, 255, 255, 0.08);
+  --brand-border-hover: rgba(249, 115, 22, 0.35);
+  --brand-glow: 0 0 24px rgba(225, 29, 72, 0.35);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -5,60 +23,94 @@
 body {
   margin: 0;
   padding: 0;
-  background: radial-gradient(circle at 50% 0%, #111827 0%, #080c14 100%);
-  color: #e2e8f0;
+  background-color: var(--brand-bg);
+  background: radial-gradient(circle at 50% 0%, #111117 0%, #050507 100%);
+  color: #ffffff;
   min-height: 100vh;
   overflow-x: hidden;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom modern scrollbar */
+/* Custom YouTube & Portfolio Dark Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: #07070a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #1f1f28;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #06b6d4;
+  background: #e11d48;
 }
 
-/* Glowing pulse animation */
-@keyframes pulse-red {
+/* Glowing pulse animation for LIVE indicators */
+@keyframes pulse-rose {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.8);
   }
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    box-shadow: 0 0 0 8px rgba(225, 29, 72, 0);
   }
   100% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
   }
 }
 
 .live-dot {
   width: 8px;
   height: 8px;
-  background-color: #ef4444;
+  background-color: var(--brand-primary);
   border-radius: 50%;
   display: inline-block;
-  animation: pulse-red 1.8s infinite;
+  animation: pulse-rose 1.8s infinite;
 }
 
-/* Glassmorphism utility */
-.glass-panel {
-  background: rgba(17, 24, 39, 0.75);
+/* YouTube Style Glass Panels with Portfolio Aesthetics */
+.yt-glass-panel {
+  background: rgba(13, 13, 16, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.yt-brand-gradient-text {
+  background: linear-gradient(135deg, #f97316 0%, #e11d48 50%, #c026d3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.yt-hover-scale {
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.yt-hover-scale:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(225, 29, 72, 0.2);
+  border-color: rgba(225, 29, 72, 0.4);
+}
+
+/* Text clamp utilities */
+.clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

@@ -1,26 +1,27 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import {
-  Container,
   Box,
   Typography,
   Snackbar,
   Alert,
   Fade,
   Chip,
-  Avatar,
   Paper,
+  Grid,
 } from '@mui/material';
-import HistoryIcon from '@mui/icons-material/History';
 import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import CategoryBar from './components/CategoryBar';
 import VideoPlayer from './components/VideoPlayer';
+import RelatedVideosRail from './components/RelatedVideosRail';
 import ChannelGrid from './components/ChannelGrid';
 import MovieGrid from './components/MovieGrid';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
 export default function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('live'); // 'live' or 'movies'
   const [languages, setLanguages] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState('all');
@@ -63,7 +64,7 @@ export default function App() {
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
 
-  // End-to-End WebSocket Real-time Connection & Notification Hub
+  // WebSocket Real-time Connection
   useEffect(() => {
     let ws = null;
     let reconnectTimer = null;
@@ -78,19 +79,16 @@ export default function App() {
         wsRef.current = ws;
 
         ws.onopen = () => {
-          console.log('%c🟢 WebSocket Connected to StreamPulse Live Engine', 'color: #10b981; font-weight: bold; font-size: 13px;');
           setWsConnected(true);
         };
 
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('[WS Realtime Push]:', data);
-
             if (data.type === 'connection_established') {
               setNotification({
                 open: true,
-                message: `🟢 Realtime Sync Active: Connected to StreamPulse WebSocket (${data.stats?.channels || 1234} Channels, ${data.stats?.movies || 202} Movies)`,
+                message: `🟢 Realtime Sync Active: Connected (${data.stats?.channels || 1234} Channels, ${data.stats?.movies || 202} Movies)`,
                 severity: 'success',
               });
             } else if (data.type === 'catalog_updated') {
@@ -99,7 +97,6 @@ export default function App() {
                 message: `🔔 ${data.message}`,
                 severity: 'info',
               });
-              // Instantly refresh movies and categories without page reload!
               fetchMovies();
               fetchCategories(selectedLanguage);
               fetchChannels();
@@ -109,20 +106,13 @@ export default function App() {
                 message: `🔄 ${data.message}`,
                 severity: 'info',
               });
-            } else if (data.type === 'stream_healed') {
-              setNotification({
-                open: true,
-                message: `⚡ Stream Healed: ${data.title} token refreshed`,
-                severity: 'success',
-              });
             }
           } catch (e) {
-            console.error('Failed to parse WS push message:', e);
+            console.error('Failed to parse WS message:', e);
           }
         };
 
         ws.onclose = () => {
-          console.log('%c🔴 WebSocket Disconnected. Retrying in 3s...', 'color: #ef4444;');
           setWsConnected(false);
           reconnectTimer = setTimeout(connectWS, 3000);
         };
@@ -150,7 +140,7 @@ export default function App() {
       wsRef.current.send(JSON.stringify({ type: 'ping' }));
       setNotification({
         open: true,
-        message: '⚡ Ping sent over WebSocket! Real-time connection is 100% active.',
+        message: '⚡ Ping sent over WebSocket! Live sync is 100% active.',
         severity: 'success',
       });
     } else {
@@ -166,17 +156,13 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('streampulse_favs', JSON.stringify(favorites));
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) {}
   }, [favorites]);
 
   useEffect(() => {
     try {
       localStorage.setItem('streampulse_recent', JSON.stringify(recentChannels));
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) {}
   }, [recentChannels]);
 
   // Fetch Languages
@@ -189,7 +175,7 @@ export default function App() {
     }
   };
 
-  // Fetch Categories for selected language
+  // Fetch Categories
   const fetchCategories = async (lang = selectedLanguage) => {
     try {
       const params = {};
@@ -220,14 +206,8 @@ export default function App() {
 
       const res = await axios.get(`${API_BASE}/channels/`, { params });
       setChannels(res.data);
-      // Do not auto-play or force-select on initial page load (Zero Autoplay requirement)
     } catch (err) {
       console.error('Failed to fetch channels:', err);
-      setNotification({
-        open: true,
-        message: 'Could not connect to Django API backend on port 8000.',
-        severity: 'error',
-      });
     } finally {
       setLoading(false);
     }
@@ -248,17 +228,16 @@ export default function App() {
     }
   };
 
-  // Sync Online Movie Sources on-demand via WebSocket or REST
+  // Sync Movies
   const handleSyncMovies = async () => {
     setMoviesSyncing(true);
     setNotification({
       open: true,
-      message: 'Broadcasting live sync request to online movie sources via WebSocket...',
+      message: 'Syncing online movie catalogs...',
       severity: 'info',
     });
 
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      // Trigger via WebSocket real-time pipeline!
       wsRef.current.send(JSON.stringify({ type: 'trigger_sync' }));
       setMoviesSyncing(false);
     } else {
@@ -267,17 +246,11 @@ export default function App() {
         await fetchMovies();
         setNotification({
           open: true,
-          message: `Sync Complete! Added ${res.data.added} new movies. Total: ${res.data.total} movies ready.`,
+          message: `Sync Complete! ${res.data.total} movies ready.`,
           severity: 'success',
         });
       } catch (err) {
-        console.error('Failed to sync movies:', err);
         await fetchMovies();
-        setNotification({
-          open: true,
-          message: 'Online sync finished with active catalog.',
-          severity: 'info',
-        });
       } finally {
         setMoviesSyncing(false);
       }
@@ -285,11 +258,6 @@ export default function App() {
   };
 
   useEffect(() => {
-    console.log(
-      "%c🔒 StreamPulse Cryptographic Shield Active\n%cRaw upstream domains, server IPs, and tokens are secured and hidden from client inspection.",
-      "color: #10b981; font-weight: bold; font-size: 14px;",
-      "color: #94a3b8; font-size: 11px;"
-    );
     fetchLanguages();
     fetchMovies();
   }, []);
@@ -301,7 +269,7 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchChannels();
-    }, 180);
+    }, 150);
     return () => clearTimeout(timer);
   }, [selectedCategory, selectedLanguage, searchQuery]);
 
@@ -317,10 +285,11 @@ export default function App() {
     setSelectedChannel(channelWithShield);
     setSelectedMovie(null);
     setIsMinimized(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     setRecentChannels((prev) => {
       const filtered = prev.filter((item) => item.id !== ch.id);
-      return [channelWithShield, ...filtered].slice(0, 6);
+      return [channelWithShield, ...filtered].slice(0, 10);
     });
   }, []);
 
@@ -335,23 +304,23 @@ export default function App() {
     const movieAsChannel = {
       id: `movie_${movie.id}`,
       name: `${movie.title} (${movie.year})`,
-      category_name: movie.category,
+      category_name: movie.category || 'Cinema VOD',
       category_slug: 'movies',
       stream_url: shieldedUrl,
       logo_url: movie.poster_url,
-      quality: movie.quality,
-      language: movie.language,
+      quality: movie.quality || '1080p FHD',
+      language: movie.language || 'Tamil',
       is_active: true,
+      description: `${movie.title} (${movie.year}) • Directed/Starring ${movie.stars || 'Blockbuster cast'}. ${movie.storyline || 'Stream in 1080p Full HD with synchronized multi-language audio tracks.'}`,
     };
 
     setSelectedChannel(movieAsChannel);
     setNotification({
       open: true,
-      message: `Shield Protected: ${movie.title} (${movie.year}) [Opaque Token Active]`,
+      message: `Now Streaming: ${movie.title} (${movie.year})`,
       severity: 'success',
     });
   };
-
 
   const handleToggleFavorite = useCallback((channelId) => {
     setFavorites((prev) => {
@@ -359,7 +328,7 @@ export default function App() {
       const updated = exists ? prev.filter((id) => id !== channelId) : [...prev, channelId];
       setNotification({
         open: true,
-        message: exists ? 'Removed from favorites' : 'Saved to favorites!',
+        message: exists ? 'Removed from favorites' : 'Subscribed / Added to favorites!',
         severity: exists ? 'info' : 'success',
       });
       return updated;
@@ -374,9 +343,10 @@ export default function App() {
   }, [channels, showFavoritesOnly, favorites]);
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Navbar */}
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#050507' }}>
+      {/* 1. YouTube Top Navbar */}
       <Navbar
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         totalChannels={channels.length}
@@ -393,231 +363,168 @@ export default function App() {
           fetchCategories(selectedLanguage);
           fetchChannels();
           fetchMovies();
-          setNotification({ open: true, message: 'Content refreshed!', severity: 'success' });
+          setNotification({ open: true, message: 'Channels & catalog refreshed!', severity: 'success' });
         }}
       />
 
-      <Container
-        maxWidth={isTheaterMode ? false : "xl"}
-        sx={{
-          py: 2.5,
-          px: isTheaterMode ? { xs: 0, sm: 2, md: 4 } : { xs: 2, md: 3 },
-          flexGrow: 1,
-          transition: 'all 0.3s ease',
-        }}
-      >
-        {/* Main Live Player Section */}
-        {selectedChannel ? (
-          <Fade in timeout={300}>
-            <Box sx={{ mb: 3 }}>
-              <VideoPlayer
-                channel={selectedChannel}
-                isFavorite={favorites.includes(selectedChannel.id)}
-                onToggleFavorite={handleToggleFavorite}
-                isTheaterMode={isTheaterMode}
-                onToggleTheaterMode={() => setIsTheaterMode(!isTheaterMode)}
-                isMinimized={isMinimized}
-                onToggleMinimize={() => setIsMinimized(!isMinimized)}
-              />
-            </Box>
-          </Fade>
-        ) : (
-          <Fade in timeout={350}>
-            <Paper
-              elevation={4}
-              sx={{
-                p: { xs: 3, md: 4 },
-                mb: 3,
-                borderRadius: 4,
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
-                boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.7)',
-                textAlign: 'center',
-                position: 'relative',
-                overflow: 'hidden',
+      {/* 2. Main Content Area with YouTube Sidebar Rail */}
+      <Box sx={{ display: 'flex', flexGrow: 1, position: 'relative' }}>
+        {/* YouTube Left Sidebar Rail */}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          selectedCategory={selectedCategory}
+          onSelectCategory={(slug) => {
+            setSelectedCategory(slug);
+            setShowFavoritesOnly(false);
+          }}
+          selectedLanguage={selectedLanguage}
+          onSelectLanguage={(lang) => {
+            setSelectedLanguage(lang);
+            setSelectedCategory('all');
+            setShowFavoritesOnly(false);
+          }}
+          showFavoritesOnly={showFavoritesOnly}
+          setShowFavoritesOnly={setShowFavoritesOnly}
+          favoritesCount={favorites.length}
+          recentCount={recentChannels.length}
+          languages={languages}
+          categories={categories}
+        />
+
+        {/* Center / Main Scrollable Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 1.5, sm: 2.5, md: 3 },
+            maxWidth: isTheaterMode ? '100%' : '1800px',
+            mx: 'auto',
+            width: '100%',
+            overflowX: 'hidden',
+          }}
+        >
+          {/* YouTube Watch Page (When a channel/movie is selected) */}
+          {selectedChannel && (
+            <Fade in timeout={300}>
+              <Box sx={{ mb: 4 }}>
+                {isTheaterMode ? (
+                  // Theater Mode: Full Width Player
+                  <Box sx={{ mb: 3 }}>
+                    <VideoPlayer
+                      channel={selectedChannel}
+                      isFavorite={favorites.includes(selectedChannel.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                      isTheaterMode={isTheaterMode}
+                      onToggleTheaterMode={() => setIsTheaterMode(!isTheaterMode)}
+                      isMinimized={isMinimized}
+                      onToggleMinimize={() => setIsMinimized(!isMinimized)}
+                    />
+                  </Box>
+                ) : (
+                  // Standard YouTube Watch Layout: 70% Player + 30% Related Feed
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} lg={8.5}>
+                      <VideoPlayer
+                        channel={selectedChannel}
+                        isFavorite={favorites.includes(selectedChannel.id)}
+                        onToggleFavorite={handleToggleFavorite}
+                        isTheaterMode={isTheaterMode}
+                        onToggleTheaterMode={() => setIsTheaterMode(!isTheaterMode)}
+                        isMinimized={isMinimized}
+                        onToggleMinimize={() => setIsMinimized(!isMinimized)}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} lg={3.5}>
+                      <RelatedVideosRail
+                        channels={channels}
+                        currentChannel={selectedChannel}
+                        onSelectChannel={handleSelectChannel}
+                        favorites={favorites}
+                        onToggleFavorite={handleToggleFavorite}
+                        recentChannels={recentChannels}
+                      />
+                    </Grid>
+                  </Grid>
+                )}
+              </Box>
+            </Fade>
+          )}
+
+          {/* YouTube Filter Chips Bar */}
+          {activeTab === 'live' && (
+            <CategoryBar
+              languages={languages}
+              selectedLanguage={selectedLanguage}
+              onSelectLanguage={(lang) => {
+                setSelectedLanguage(lang);
+                setSelectedCategory('all');
+                setShowFavoritesOnly(false);
               }}
-            >
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 2,
-                  py: 0.6,
-                  borderRadius: 20,
-                  bgcolor: 'rgba(6, 182, 212, 0.15)',
-                  border: '1px solid rgba(6, 182, 212, 0.3)',
-                  color: '#38bdf8',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  mb: 2,
-                }}
-              >
-                <span>⚡</span> ZERO AUTOPLAY • CLICK ANY CHANNEL OR MOVIE TO STREAM
-              </Box>
-
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 900,
-                  background: 'linear-gradient(90deg, #f8fafc 0%, #38bdf8 50%, #818cf8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: 1,
-                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.4rem' },
-                }}
-              >
-                StreamPulse Live IPTV & Tamil OTT
-              </Typography>
-
-              <Typography
-                variant="body1"
-                sx={{
-                  color: '#94a3b8',
-                  maxWidth: 680,
-                  mx: 'auto',
-                  mb: 3,
-                  fontSize: { xs: '0.85rem', sm: '1rem' },
-                }}
-              >
-                1,227 verified live TV channels and 93 multi-language movies (Tamil, Hollywood English, Dubbed, Hindi).
-                Powered by dynamic self-healing origin discovery and on-the-fly stealth key extraction.
-              </Typography>
-
-              {/* Quick Launch Popular Channels */}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1.2 }}>
-                {channels.slice(0, 6).map((ch) => (
-                  <Chip
-                    key={ch.id}
-                    label={`📺 ${ch.name}`}
-                    clickable
-                    onClick={() => handleSelectChannel(ch)}
-                    sx={{
-                      bgcolor: 'rgba(6, 182, 212, 0.12)',
-                      color: '#e2e8f0',
-                      border: '1px solid rgba(6, 182, 212, 0.3)',
-                      fontWeight: 600,
-                      '&:hover': {
-                        bgcolor: 'rgba(6, 182, 212, 0.25)',
-                        borderColor: '#06b6d4',
-                      },
-                    }}
-                  />
-                ))}
-              </Box>
-            </Paper>
-          </Fade>
-        )}
-
-        {/* Live TV Content */}
-        {activeTab === 'live' && (
-          <>
-            {/* Recently Watched Quick Shelf */}
-            {recentChannels.length > 1 && (
-              <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'center', gap: 1.2, overflowX: 'auto', py: 0.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, color: '#94a3b8' }}>
-                  <HistoryIcon fontSize="small" sx={{ color: '#06b6d4' }} />
-                  <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
-                    RECENT:
-                  </Typography>
-                </Box>
-                {recentChannels.map((rc) => (
-                  <Chip
-                    key={rc.id}
-                    avatar={rc.logo_url ? <Avatar src={rc.logo_url} sx={{ bgcolor: '#fff' }} /> : null}
-                    label={rc.name}
-                    size="small"
-                    onClick={() => handleSelectChannel(rc)}
-                    sx={{
-                      backgroundColor: selectedChannel?.id === rc.id ? 'rgba(6, 182, 212, 0.2)' : 'rgba(30, 41, 59, 0.6)',
-                      color: selectedChannel?.id === rc.id ? '#38bdf8' : '#e2e8f0',
-                      border: selectedChannel?.id === rc.id ? '1px solid #06b6d4' : '1px solid rgba(255, 255, 255, 0.08)',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      '&:hover': { backgroundColor: 'rgba(6, 182, 212, 0.3)' },
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-
-            {/* Language & Category Multi-Tier Filter System */}
-            <Box sx={{ mb: 2 }}>
-              <CategoryBar
-                languages={languages}
-                selectedLanguage={selectedLanguage}
-                onSelectLanguage={(lang) => {
-                  setSelectedLanguage(lang);
-                  setSelectedCategory('all');
-                  setShowFavoritesOnly(false);
-                }}
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onSelectCategory={(slug) => {
-                  setSelectedCategory(slug);
-                  setShowFavoritesOnly(false);
-                }}
-                loading={loading}
-                totalChannels={channels.length}
-              />
-            </Box>
-
-            {/* Channels Section Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, px: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: -0.5 }}>
-                {showFavoritesOnly
-                  ? `Your Favorite Channels (${displayedChannels.length})`
-                  : selectedCategory === 'all'
-                  ? `${selectedLanguage === 'all' ? 'All Live TV Channels' : selectedLanguage + ' Channels'} (${displayedChannels.length})`
-                  : `${selectedLanguage === 'all' ? '' : selectedLanguage + ' '}${categories.find((c) => c.slug === selectedCategory)?.name || 'Category'} (${displayedChannels.length})`}
-              </Typography>
-            </Box>
-
-            {/* Channel Grid */}
-            <ChannelGrid
-              channels={displayedChannels}
-              selectedChannel={selectedChannel}
-              onSelectChannel={(ch) => {
-                handleSelectChannel(ch);
-                if (!isTheaterMode) {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={(slug) => {
+                setSelectedCategory(slug);
+                setShowFavoritesOnly(false);
               }}
-              favorites={favorites}
-              onToggleFavorite={handleToggleFavorite}
               loading={loading}
+              totalChannels={channels.length}
             />
-          </>
-        )}
+          )}
 
-        {/* Movies (Multi-Language VOD) Content */}
-        {activeTab === 'movies' && (
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, px: 1 }}>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: -0.5 }}>
-                  Multi-Language Cinema & VOD ({movies.length})
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                  Auto-resolved stealth streams across Tamil, Hollywood English, Dubbed, and Hindi with 1080p FHD playback
+          {/* Browse Feed Content: Live TV Channels */}
+          {activeTab === 'live' && (
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, px: 0.5 }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#ffffff', letterSpacing: -0.4 }}>
+                  {showFavoritesOnly
+                    ? `Subscribed Channels (${displayedChannels.length})`
+                    : selectedCategory === 'all'
+                    ? `${selectedLanguage === 'all' ? 'Recommended Live Streams' : selectedLanguage.toUpperCase() + ' Streams'} (${displayedChannels.length})`
+                    : `${categories.find((c) => c.slug === selectedCategory)?.name || 'Category'} (${displayedChannels.length})`}
                 </Typography>
               </Box>
+
+              <ChannelGrid
+                channels={displayedChannels}
+                selectedChannel={selectedChannel}
+                onSelectChannel={handleSelectChannel}
+                favorites={favorites}
+                onToggleFavorite={handleToggleFavorite}
+                loading={loading}
+              />
             </Box>
+          )}
 
-            <MovieGrid
-              movies={movies}
-              selectedMovie={selectedMovie}
-              onSelectMovie={handleSelectMovie}
-              loading={moviesLoading}
-              searchQuery={searchQuery}
-              onSyncMovies={handleSyncMovies}
-              syncing={moviesSyncing}
-            />
-          </Box>
-        )}
-      </Container>
+          {/* Browse Feed Content: Movies & Cinema VOD */}
+          {activeTab === 'movies' && (
+            <Box>
+              <Box sx={{ mb: 2.5, px: 0.5 }}>
+                <Typography variant="h5" sx={{ fontWeight: 900, color: '#ffffff', letterSpacing: -0.5 }}>
+                  Cinema VOD & Multi-Language Movies ({movies.length})
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                  Curated 1080p FHD streams across Tamil, Hollywood English, Dubbed, and Hindi.
+                </Typography>
+              </Box>
 
-      {/* Notification Toast */}
+              <MovieGrid
+                movies={movies}
+                selectedMovie={selectedMovie}
+                onSelectMovie={handleSelectMovie}
+                loading={moviesLoading}
+                searchQuery={searchQuery}
+                onSyncMovies={handleSyncMovies}
+                syncing={moviesSyncing}
+              />
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      {/* Toast Notification */}
       <Snackbar
         open={notification.open}
         autoHideDuration={3000}
@@ -628,7 +535,12 @@ export default function App() {
           severity={notification.severity}
           variant="filled"
           onClose={() => setNotification((prev) => ({ ...prev, open: false }))}
-          sx={{ borderRadius: 3, fontWeight: 600 }}
+          sx={{
+            borderRadius: 3,
+            fontWeight: 700,
+            bgcolor: notification.severity === 'success' ? '#10b981' : notification.severity === 'error' ? '#e11d48' : '#f97316',
+            color: '#ffffff',
+          }}
         >
           {notification.message}
         </Alert>
