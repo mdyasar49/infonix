@@ -69,8 +69,10 @@ export default function App() {
   useEffect(() => {
     let ws = null;
     let reconnectTimer = null;
+    let isUnmounted = false;
 
     const connectWS = () => {
+      if (isUnmounted) return;
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsHost = window.location.hostname || '127.0.0.1';
       const wsUrl = `${wsProtocol}//${wsHost}:8000/ws/`;
@@ -80,7 +82,7 @@ export default function App() {
         wsRef.current = ws;
 
         ws.onopen = () => {
-          setWsConnected(true);
+          if (!isUnmounted) setWsConnected(true);
         };
 
         ws.onmessage = (event) => {
@@ -89,7 +91,7 @@ export default function App() {
             if (data.type === 'connection_established') {
               setNotification({
                 open: true,
-                message: `🟢 Realtime Sync Active: Connected (${data.stats?.channels || 1234} Channels, ${data.stats?.movies || 202} Movies)`,
+                message: `🟢 Realtime Sync Active: Connected (${data.stats?.channels || 1234} Channels, ${data.stats?.movies || 230} Movies)`,
                 severity: 'success',
               });
             } else if (data.type === 'catalog_updated') {
@@ -114,27 +116,40 @@ export default function App() {
         };
 
         ws.onclose = () => {
-          setWsConnected(false);
-          reconnectTimer = setTimeout(connectWS, 3000);
+          if (!isUnmounted) {
+            setWsConnected(false);
+            reconnectTimer = setTimeout(connectWS, 4000);
+          }
         };
 
-        ws.onerror = (err) => {
-          console.warn('WebSocket error:', err);
-          ws.close();
+        ws.onerror = () => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.close();
+          }
         };
       } catch (err) {
-        console.error('WebSocket connection error:', err);
-        reconnectTimer = setTimeout(connectWS, 3000);
+        if (!isUnmounted) {
+          reconnectTimer = setTimeout(connectWS, 4000);
+        }
       }
     };
 
     connectWS();
 
     return () => {
+      isUnmounted = true;
       if (reconnectTimer) clearTimeout(reconnectTimer);
-      if (ws) ws.close();
+      if (ws) {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        } else if (ws.readyState === WebSocket.CONNECTING) {
+          ws.onopen = () => {
+            try { ws.close(); } catch (e) {}
+          };
+        }
+      }
     };
-  }, [selectedLanguage]);
+  }, []);
 
   const handleWsPing = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {

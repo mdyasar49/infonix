@@ -104,10 +104,12 @@ export default function ScrollableChipsRail({
           const label = item.label || item.name || id;
           const count = item.count !== undefined ? item.count : (item.channel_count !== undefined ? item.channel_count : null);
 
+          const chipIcon = React.isValidElement(item.icon) ? item.icon : undefined;
+
           return (
             <Chip
               key={id}
-              icon={item.icon || undefined}
+              icon={chipIcon}
               label={`${label}${count !== null && count !== undefined ? ` (${count})` : ''}`}
               clickable
               onClick={() => onSelect(id)}

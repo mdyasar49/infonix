@@ -177,7 +177,8 @@ export default function VideoPlayer({
 
   // Main Stream Initializer (Supports both Direct MP4/WebM and HLS Streams)
   const initStream = useCallback((streamUrl) => {
-    if (!videoRef.current || !streamUrl) return;
+    const video = videoRef.current;
+    if (!video || !streamUrl) return;
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
