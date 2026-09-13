@@ -523,10 +523,12 @@ export default function VideoPlayer({
       >
         {isYouTube ? (
           <iframe
-            src={getEmbedUrl(channel.stream_url)}
-            title={channel.name || 'StreamPulse Cinema Player'}
+            key={channel?.id || channel?.stream_url}
+            src={getEmbedUrl(channel?.stream_url)}
+            title={channel?.name || 'StreamPulse Cinema Player'}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
+            loading="eager"
             style={{
               position: 'absolute',
               top: 0,
