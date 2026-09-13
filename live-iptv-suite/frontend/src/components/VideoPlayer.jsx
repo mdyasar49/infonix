@@ -105,6 +105,25 @@ export default function VideoPlayer({
   const [buffered, setBuffered] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
 
+  const isYouTube =
+    channel?.stream_url?.includes('youtube.com') ||
+    channel?.stream_url?.includes('youtu.be');
+
+  const getEmbedUrl = (url) => {
+    if (!url) return '';
+    if (url.includes('/embed/')) {
+      if (!url.includes('autoplay=1')) {
+        return url + (url.includes('?') ? '&autoplay=1' : '?autoplay=1');
+      }
+      return url;
+    }
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    if (match && match[1]) {
+      return `https://www.youtube-nocookie.com/embed/${match[1]}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`;
+    }
+    return url;
+  };
+
   const isLiveStream = duration === 0 || duration === Infinity || !isFinite(duration) || (channel?.category_slug !== 'movies' && !channel?.id?.toString().startsWith('movie_'));
 
   const formatTime = (secs) => {
@@ -172,8 +191,17 @@ export default function VideoPlayer({
     setAudioTracks([]);
     setCurrentAudioTrack(0);
 
-    const video = videoRef.current;
-    video.volume = isMuted ? 0 : volume;
+    if (streamUrl.includes('youtube.com') || streamUrl.includes('youtu.be')) {
+      setIsLoading(false);
+      setError(null);
+      setIsPlaying(true);
+      setStreamStats({
+        resolution: channel?.quality || '4K Ultra HD',
+        bitrate: 8500,
+        buffer: 15.0,
+      });
+      return;
+    }
 
     const playWithHls = (urlToPlay) => {
       if (hlsRef.current) {
@@ -493,21 +521,40 @@ export default function VideoPlayer({
           border: isFullscreen || isTheaterMode ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
-        <video
-          ref={videoRef}
-          onClick={handlePlayPause}
-          playsInline
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            backgroundColor: '#000000',
-            cursor: 'pointer',
-          }}
-        />
+        {isYouTube ? (
+          <iframe
+            src={getEmbedUrl(channel.stream_url)}
+            title={channel.name || 'StreamPulse Cinema Player'}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              border: 0,
+              backgroundColor: '#000000',
+              zIndex: 3,
+            }}
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            onClick={handlePlayPause}
+            playsInline
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              backgroundColor: '#000000',
+              cursor: 'pointer',
+            }}
+          />
+        )}
 
         {/* Loading Spinner */}
         {isLoading && (
@@ -614,8 +661,9 @@ export default function VideoPlayer({
           </Box>
         )}
 
-        {/* 2. YouTube Authentic Bottom Control Bar */}
-        <Fade in={showControls || !isPlaying}>
+        {/* 2. YouTube Authentic Bottom Control Bar (For Live Channels & Native VOD) */}
+        {!isYouTube && (
+          <Fade in={showControls || !isPlaying}>
           <Box
             sx={{
               position: 'absolute',
@@ -767,6 +815,7 @@ export default function VideoPlayer({
             </Box>
           </Box>
         </Fade>
+        )}
 
         {/* Settings Popup Menu */}
         <Menu
