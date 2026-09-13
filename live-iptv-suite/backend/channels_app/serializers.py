@@ -25,8 +25,6 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'icon', 'order', 'channel_count']
 
 class MovieSerializer(serializers.ModelSerializer):
-    stream_url = serializers.SerializerMethodField()
-
     class Meta:
         model = Movie
         fields = [
@@ -34,6 +32,3 @@ class MovieSerializer(serializers.ModelSerializer):
             'poster_url', 'stream_url', 'duration', 'rating', 'synopsis',
             'views_count', 'created_at'
         ]
-
-    def get_stream_url(self, obj):
-        return f"/api/stream/movie/{obj.id}/"
