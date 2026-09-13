@@ -5,12 +5,11 @@ import {
   Typography,
   Box,
   Chip,
-  IconButton,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import HdIcon from '@mui/icons-material/Hd';
+import QualityBadge from './common/QualityBadge';
 
 export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
   return (
@@ -41,7 +40,7 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
         },
       }}
     >
-      {/* Poster Container (16:9 or Vertical Poster) */}
+      {/* Poster Container */}
       <Box sx={{ position: 'relative', width: '100%', pt: '135%', overflow: 'hidden', bgcolor: '#07070a' }}>
         <CardMedia
           component="img"
@@ -96,7 +95,7 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
             />
             {movie.language && (
               <Chip
-                label={movie.language}
+                label={movie.language.toUpperCase()}
                 size="small"
                 sx={{
                   bgcolor: 'rgba(0, 0, 0, 0.75)',
@@ -171,12 +170,7 @@ export default memo(function MovieCard({ movie, isSelected, onSelectMovie }) {
             zIndex: 2,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(0,0,0,0.7)', px: 0.8, py: 0.2, borderRadius: 1 }}>
-            <HdIcon sx={{ color: '#00e5ff', fontSize: 16 }} />
-            <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 700, fontSize: '0.68rem' }}>
-              {movie.quality || '1080p'}
-            </Typography>
-          </Box>
+          <QualityBadge quality={movie.quality || '1080p FHD'} size="small" />
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, bgcolor: 'rgba(0,0,0,0.7)', px: 0.8, py: 0.2, borderRadius: 1 }}>
             <AccessTimeIcon sx={{ color: '#f97316', fontSize: 13 }} />

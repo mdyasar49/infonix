@@ -4,7 +4,6 @@ import {
   CardActionArea,
   Box,
   Typography,
-  Chip,
   IconButton,
   Tooltip,
   Avatar,
@@ -14,6 +13,8 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TvIcon from '@mui/icons-material/Tv';
+import LiveBadge from './common/LiveBadge';
+import QualityBadge from './common/QualityBadge';
 
 export default memo(function ChannelCard({
   channel,
@@ -141,47 +142,16 @@ export default memo(function ChannelCard({
             </Box>
           </Box>
 
-          {/* Top Left Quality Chip */}
-          <Chip
-            label={channel.quality || 'FHD'}
-            size="small"
-            sx={{
-              position: 'absolute',
-              top: 8,
-              left: 8,
-              height: 20,
-              fontSize: '0.65rem',
-              fontWeight: 800,
-              bgcolor: 'rgba(0, 0, 0, 0.75)',
-              color: '#00e5ff',
-              border: '1px solid rgba(0, 229, 255, 0.4)',
-              backdropFilter: 'blur(4px)',
-            }}
+          {/* Top Left Reusable Quality Chip */}
+          <QualityBadge
+            quality={channel.quality || 'FHD'}
+            sx={{ position: 'absolute', top: 8, left: 8 }}
           />
 
-          {/* Bottom Right YouTube LIVE Badge */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 8,
-              right: 8,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.6,
-              bgcolor: 'rgba(225, 29, 72, 0.9)',
-              color: '#ffffff',
-              px: 1,
-              py: 0.3,
-              borderRadius: 1,
-              fontWeight: 800,
-              fontSize: '0.68rem',
-              letterSpacing: '0.5px',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
-            }}
-          >
-            <span className="live-dot" style={{ width: 6, height: 6, backgroundColor: '#ffffff' }} />
-            <span>LIVE</span>
-          </Box>
+          {/* Bottom Right Reusable LIVE Badge */}
+          <LiveBadge
+            sx={{ position: 'absolute', bottom: 8, right: 8 }}
+          />
         </Box>
 
         {/* 2. YouTube Video Info Section */}

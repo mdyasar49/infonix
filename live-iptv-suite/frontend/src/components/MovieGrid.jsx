@@ -6,16 +6,15 @@ import {
   Chip,
   Skeleton,
   Button,
-  Pagination,
   TextField,
-  InputAdornment,
 } from '@mui/material';
 import MovieIcon from '@mui/icons-material/Movie';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SyncIcon from '@mui/icons-material/Sync';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import SearchIcon from '@mui/icons-material/Search';
 import MovieCard from './MovieCard';
+import LanguagePills from './common/LanguagePills';
+import ScrollableChipsRail from './common/ScrollableChipsRail';
+import PaginationBar from './common/PaginationBar';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -45,13 +44,19 @@ export default function MovieGrid({
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Available Languages
-  const availableLanguages = useMemo(() => {
-    const langs = new Set();
+  // Available Languages with Counts
+  const availableLanguagesWithCounts = useMemo(() => {
+    const langMap = {};
     movies.forEach((m) => {
-      if (m.language) langs.add(m.language);
+      if (m.language) {
+        const l = m.language.toLowerCase();
+        langMap[l] = (langMap[l] || 0) + 1;
+      }
     });
-    return Array.from(langs).sort();
+    return Object.entries(langMap).map(([lang, count]) => ({
+      language: lang,
+      count,
+    }));
   }, [movies]);
 
   // Available Genres
@@ -177,65 +182,36 @@ export default function MovieGrid({
           </Button>
         </Box>
 
-        {/* Row 1: Languages */}
+        {/* Row 1: Reusable Language Filter Pills */}
         <Box sx={{ mb: 1.5 }}>
-          <Typography variant="caption" sx={{ color: '#00e5ff', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.8 }}>
-            Language:
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', py: 0.3, '&::-webkit-scrollbar': { display: 'none' } }}>
-            {availableLanguages.map((lang) => {
-              const count = movies.filter((m) => m.language === lang).length;
-              const isSelected = selectedLanguage.toLowerCase() === lang.toLowerCase();
-              return (
-                <Chip
-                  key={lang}
-                  label={`${lang.toUpperCase()} (${count})`}
-                  size="small"
-                  clickable
-                  onClick={() => {
-                    setSelectedLanguage(isSelected ? 'all' : lang);
-                    setCurrentPage(1);
-                  }}
-                  sx={{
-                    bgcolor: isSelected ? 'linear-gradient(135deg, #f97316, #e11d48)' : 'rgba(255, 255, 255, 0.06)',
-                    color: '#ffffff',
-                    fontWeight: isSelected ? 800 : 500,
-                    border: isSelected ? '1px solid #f43f5e' : '1px solid rgba(255, 255, 255, 0.08)',
-                    '&:hover': {
-                      bgcolor: isSelected ? 'linear-gradient(135deg, #fb923c, #f43f5e)' : 'rgba(255, 255, 255, 0.12)',
-                    },
-                  }}
-                />
-              );
-            })}
-          </Box>
+          <LanguagePills
+            languages={availableLanguagesWithCounts}
+            selectedLanguage={selectedLanguage}
+            onSelectLanguage={(lang) => {
+              setSelectedLanguage(lang);
+              setCurrentPage(1);
+            }}
+            allowToggle={true}
+          />
         </Box>
 
-        {/* Row 2: Era Timeline + Exact Year */}
+        {/* Row 2: Reusable Era Timeline + Exact Year */}
         <Box sx={{ mb: 1.5 }}>
           <Typography variant="caption" sx={{ color: '#f97316', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.8 }}>
             Era / Timeline:
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', flexGrow: 1, py: 0.3, '&::-webkit-scrollbar': { display: 'none' } }}>
-              {ERA_FILTERS.map((era) => {
-                const isSelected = selectedEra === era.id && !exactYear;
-                return (
-                  <Chip
-                    key={era.id}
-                    label={era.label}
-                    size="small"
-                    clickable
-                    onClick={() => { setSelectedEra(era.id); setExactYear(''); setCurrentPage(1); }}
-                    sx={{
-                      bgcolor: isSelected ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
-                      color: '#ffffff',
-                      fontWeight: isSelected ? 800 : 500,
-                      border: isSelected ? '1px solid #fb923c' : '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  />
-                );
-              })}
+            <Box sx={{ flexGrow: 1 }}>
+              <ScrollableChipsRail
+                items={ERA_FILTERS}
+                selectedId={exactYear ? '' : selectedEra}
+                onSelect={(eraId) => {
+                  setSelectedEra(eraId);
+                  setExactYear('');
+                  setCurrentPage(1);
+                }}
+                activeGradient="linear-gradient(135deg, #f97316, #ea580c)"
+              />
             </Box>
 
             {/* Exact Year Input */}
@@ -327,55 +303,15 @@ export default function MovieGrid({
             ))}
           </Grid>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mt: 4,
-                mb: 3,
-                p: 2,
-                bgcolor: '#0d0d10',
-                borderRadius: 3,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                gap: 2,
-              }}
-            >
-              <Typography variant="body2" sx={{ color: '#9ca3af', fontWeight: 600 }}>
-                Page <span style={{ color: '#ffffff', fontWeight: 800 }}>{currentPage}</span> of{' '}
-                <span style={{ color: '#ffffff', fontWeight: 800 }}>{totalPages}</span> • Showing {paginatedMovies.length} of {filteredMovies.length} movies
-              </Typography>
-
-              <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={handlePageChange}
-                color="primary"
-                size="medium"
-                showFirstButton
-                showLastButton
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    color: '#ffffff',
-                    bgcolor: 'rgba(255, 255, 255, 0.05)',
-                    fontWeight: 700,
-                    borderRadius: 2,
-                    '&:hover': {
-                      bgcolor: 'rgba(249, 115, 22, 0.25)',
-                    },
-                    '&.Mui-selected': {
-                      background: 'linear-gradient(135deg, #f97316 0%, #e11d48 100%)',
-                      color: '#ffffff',
-                      boxShadow: '0 2px 10px rgba(225, 29, 72, 0.4)',
-                    },
-                  },
-                }}
-              />
-            </Box>
-          )}
+          {/* Reusable Pagination */}
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredMovies.length}
+            currentItemsCount={paginatedMovies.length}
+            itemLabel="movies"
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </Box>

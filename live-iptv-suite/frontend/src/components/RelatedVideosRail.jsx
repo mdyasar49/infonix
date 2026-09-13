@@ -13,6 +13,7 @@ import TvIcon from '@mui/icons-material/Tv';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import LiveBadge from './common/LiveBadge';
 
 export default function RelatedVideosRail({
   channels = [],
@@ -158,23 +159,8 @@ export default function RelatedVideosRail({
                     )}
                   </Box>
 
-                  {/* LIVE Badge */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: 4,
-                      right: 4,
-                      bgcolor: 'rgba(225, 29, 72, 0.9)',
-                      color: '#ffffff',
-                      px: 0.6,
-                      py: 0.1,
-                      borderRadius: 0.8,
-                      fontSize: '0.6rem',
-                      fontWeight: 800,
-                    }}
-                  >
-                    LIVE
-                  </Box>
+                  {/* Reusable LIVE Badge */}
+                  <LiveBadge size="small" sx={{ position: 'absolute', bottom: 4, right: 4 }} />
                 </Box>
 
                 {/* Right: Info Details */}

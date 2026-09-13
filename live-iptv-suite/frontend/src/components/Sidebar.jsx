@@ -24,6 +24,7 @@ import TheaterComedyIcon from '@mui/icons-material/TheaterComedy';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ChildCareIcon from '@mui/icons-material/ChildCare';
 import TranslateIcon from '@mui/icons-material/Translate';
+import { LANGUAGE_METADATA } from '../constants/languages';
 
 export default function Sidebar({
   isOpen = true,
@@ -110,14 +111,11 @@ export default function Sidebar({
     { slug: 'kids', name: 'Kids & Cartoons', icon: <ChildCareIcon /> },
   ];
 
-  const popularLanguages = [
-    { code: 'tamil', name: 'Tamil', flag: '🇮🇳' },
-    { code: 'english', name: 'English', flag: '🇬🇧' },
-    { code: 'hindi', name: 'Hindi', flag: '🇮🇳' },
-    { code: 'telugu', name: 'Telugu', flag: '🇮🇳' },
-    { code: 'kannada', name: 'Kannada', flag: '🇮🇳' },
-    { code: 'malayalam', name: 'Malayalam', flag: '🇮🇳' },
-  ];
+  const popularLanguages = Object.entries(LANGUAGE_METADATA).map(([code, meta]) => ({
+    code,
+    name: meta.label,
+    flag: meta.flag,
+  }));
 
   return (
     <Box
