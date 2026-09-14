@@ -484,7 +484,7 @@ router.post('/onboard-candidate', async (req, res) => {
                       </tr>
                       <tr>
                         <td style="padding: 6px 0; color: #5C6A86; font-weight: 600;">Generated Password:</td>
-                        <td style="padding: 6px 0; color: #E65525; font-weight: 800; font-family: monospace; font-size: 18px; letter-spacing: 0.05em;">${password}</td>
+                        <td style="padding: 6px 0; color: #E65525; font-weight: 800; font-family: monospace; font-size: 18px; letter-spacing: 0.05em;">${candidatePassword}</td>
                       </tr>
                       <tr>
                         <td style="padding: 6px 0; color: #5C6A86; font-weight: 600;">Exam Attempts:</td>
@@ -532,7 +532,7 @@ router.post('/onboard-candidate', async (req, res) => {
       candidate: {
         name: fullName,
         email: cleanEmail,
-        password,
+        password: candidatePassword,
         portalUrl: PORTAL_URL,
         maxAttempts: 1
       }

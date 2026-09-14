@@ -299,7 +299,7 @@ function createAllTriggers() {
   const databaseId = TARGET_DATABASE_ID;
   const formId = TARGET_FORM_ID;
   
-  Logger.log("=== Creating All System Triggers ===");
+  Logger.log("=== Creating System Triggers (Single Clean Trigger) ===");
   
   // 1. Auto-Link Form Responses to Google Spreadsheet
   try {
@@ -310,55 +310,43 @@ function createAllTriggers() {
     Logger.log("⚠️ Form destination notice: " + destErr.message);
   }
 
-  // Clean existing triggers
+  // Clean existing triggers for onStudentRegistration & syncSheetResponses
   const triggers = ScriptApp.getProjectTriggers();
   triggers.forEach(function(t) {
-    if (t.getHandlerFunction() === "onStudentRegistration") {
+    const fn = t.getHandlerFunction();
+    if (fn === "onStudentRegistration" || fn === "syncSheetResponses") {
       ScriptApp.deleteTrigger(t);
     }
   });
 
   let createdCount = 0;
 
-  // 2. Create Form Submit Trigger (Google Form)
+  // 2. Create Single Form Submit Trigger (Google Form)
   try {
     const form = FormApp.openById(formId);
     ScriptApp.newTrigger("onStudentRegistration")
       .forForm(form)
       .onFormSubmit()
       .create();
-    Logger.log("✅ [1/2] Google Form Submit Trigger Connected for Form: " + form.getTitle() + " (" + formId + ")");
+    Logger.log("✅ [1/2] Single Google Form Submit Trigger Connected for Form: " + form.getTitle() + " (" + formId + ")");
     createdCount++;
   } catch (fErr) {
     Logger.log("⚠️ Form Trigger Notice: " + fErr.message);
   }
 
-  // 3. Create Spreadsheet Form Submit Trigger (Google Sheet)
-  try {
-    const ss = SpreadsheetApp.openById(databaseId);
-    ScriptApp.newTrigger("onStudentRegistration")
-      .forSpreadsheet(ss)
-      .onFormSubmit()
-      .create();
-    Logger.log("✅ [2/3] Google Spreadsheet Form Submit Trigger Connected for Sheet: " + ss.getName() + " (" + databaseId + ")");
-    createdCount++;
-  } catch (sErr) {
-    Logger.log("⚠️ Spreadsheet Trigger Notice: " + sErr.message);
-  }
-
-  // 4. Create 1-Minute Auto-Sync Fallback Trigger
+  // 3. Create 5-Minute Auto-Sync Fallback Trigger (Prevents 1-min spam/race conditions)
   try {
     ScriptApp.newTrigger("syncSheetResponses")
       .timeBased()
-      .everyMinutes(1)
+      .everyMinutes(5)
       .create();
-    Logger.log("✅ [3/3] 1-Minute Auto-Sync Fallback Trigger Connected!");
+    Logger.log("✅ [2/2] 5-Minute Auto-Sync Fallback Trigger Connected!");
     createdCount++;
   } catch (tErr) {
     Logger.log("⚠️ Time Trigger Notice: " + tErr.message);
   }
 
-  Logger.log("🎉 All Triggers Setup Complete (" + createdCount + " active triggers)!");
+  Logger.log("🎉 Triggers Setup Complete (" + createdCount + " active triggers)!");
   return { success: true, activeTriggers: createdCount };
 }
 
