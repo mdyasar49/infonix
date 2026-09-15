@@ -444,7 +444,7 @@ const recentOnboardedEmails = new Map();
 router.post('/onboard-candidate', async (req, res) => {
   try {
     await ensureCandidateUsersTable();
-    const { fullName, email, mobile = '', location = '', qualification = '', dob = '', role = 'candidate', skipEmail = false } = req.body;
+    const { fullName, email, mobile = '', location = '', qualification = '', dob = '', role = 'candidate' } = req.body;
 
     if (!fullName || !email) {
       return res.status(400).json({ success: false, message: 'Full name and email are required.' });
@@ -453,11 +453,16 @@ router.post('/onboard-candidate', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const now = Date.now();
 
-    // 1. Check in-memory 30-minute deduplication lock OR explicit skipEmail flag
-    const isRecent = recentOnboardedEmails.has(cleanEmail) && (now - recentOnboardedEmails.get(cleanEmail) < 30 * 60 * 1000);
-    const shouldSkipEmail = skipEmail || isRecent;
+    // 1. Check in-memory 30-minute deduplication lock
+    if (recentOnboardedEmails.has(cleanEmail) && (now - recentOnboardedEmails.get(cleanEmail) < 30 * 60 * 1000)) {
+      console.log(`[Onboard] Skipped duplicate welcome email for ${cleanEmail} (30-min memory lock).`);
+      return res.status(200).json({
+        success: true,
+        message: `Candidate credentials synced for ${cleanEmail} (duplicate email suppressed).`
+      });
+    }
 
-    // 2. Check MySQL Database: If candidate already registered, update details
+    // 2. Save / Update MySQL Database
     const [existingUsers] = await pool.execute(
       `SELECT id, password FROM candidate_users WHERE email = ?`,
       [cleanEmail]
@@ -481,18 +486,10 @@ router.post('/onboard-candidate', async (req, res) => {
       );
     }
 
+    // Record email sent in memory lock IMMEDIATELY
     recentOnboardedEmails.set(cleanEmail, now);
 
-    if (shouldSkipEmail) {
-      console.log(`[Onboard] Candidate ${cleanEmail} onboarded in DB. Welcome email suppressed (skipEmail=${skipEmail}, isRecent=${isRecent}).`);
-      return res.json({
-        success: true,
-        message: `Candidate credentials synced successfully for ${cleanEmail} (duplicate email suppressed).`,
-        candidate: { name: fullName, email: cleanEmail, password: candidatePassword, portalUrl: 'https://candidates.infogenx.com/login', maxAttempts: 1 }
-      });
-    }
-
-    // Send Welcome Email
+    // Send Latest Design Welcome Email via Nodemailer
     const PORTAL_URL = 'https://candidates.infogenx.com/login';
     const transporter = getAuthTransporter();
 
@@ -549,24 +546,18 @@ router.post('/onboard-candidate', async (req, res) => {
     `;
 
     await transporter.sendMail({
-      from: '"Infogenx" <infogenx.dm@gmail.com>',
+      from: '"Infogenx HR Operations" <infogenx.dm@gmail.com>',
       to: cleanEmail,
-      subject: 'Application Received Successfully - Infogenx Candidate Assessment Portal',
+      subject: 'Infogenx HR Training Credentials - INFOGENX Candidate Onboarding & Assessment Portal',
       html: htmlContent
     });
 
-    console.log(`[CandidateAuth] Welcome email delivered to ${cleanEmail}`);
+    console.log(`[CandidateAuth] Latest design welcome email delivered to ${cleanEmail}`);
 
     return res.json({
       success: true,
       message: `Welcome email and credentials sent successfully to ${cleanEmail}.`,
-      candidate: {
-        name: fullName,
-        email: cleanEmail,
-        password: candidatePassword,
-        portalUrl: PORTAL_URL,
-        maxAttempts: 1
-      }
+      candidate: { name: fullName, email: cleanEmail, password: candidatePassword, portalUrl: PORTAL_URL, maxAttempts: 1 }
     });
   } catch (err) {
     console.error('[CandidateAuth] onboard error:', err);
