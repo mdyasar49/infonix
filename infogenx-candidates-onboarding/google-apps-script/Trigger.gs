@@ -15,7 +15,6 @@
 // Google Form: https://docs.google.com/forms/d/e/1FAIpQLSdAffcQaR1oRuv_NwT5D-MrnGbjPq0EE_cka6jAZ5FjEgt0WA/viewform
 const TARGET_FORM_ID = "1ugPH89EBC1RSVJrrHKs3qnYnyR3y5rXAVwK43wamthE";
 const TARGET_DATABASE_ID = "1tEjn1hJ0rd2pNV3kaLyv4SitFyoRLwCKb5loAdEvjoM";
-const BACKUP_FORM_ID = "1hBH8dGgH-yNFFfnS0tHOmsZM-Tm3HhiSY-BXCNWlMV0";
 const PRIMARY_PROJECT_ID = "1u1_v1sF907CLG4Yk33NHYMQEtNnpgENiNq4CHqAbUMLHmioZAjvJVzC4";
 
 function isPrimaryProject() {
@@ -314,7 +313,7 @@ function connectOriginalForm(originalFormIdOrUrl) {
 function createFormTrigger(explicitFormId) {
   const formId = explicitFormId || 
                  PropertiesService.getScriptProperties().getProperty("FORM_ID") || 
-                 BACKUP_FORM_ID;
+                 TARGET_FORM_ID;
 
   Logger.log("Connecting trigger for Form ID: " + formId);
   const form = FormApp.openById(formId);
