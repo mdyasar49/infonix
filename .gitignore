@@ -25,3 +25,9 @@ build/
 # Inner git repo backups
 .git_repo/
 **/.git_repo/
+
+# Scratch & temporary files
+scratch/
+**/scratch/
+*.png
+*.docx

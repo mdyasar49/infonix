@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import loginRouter from "./routes/login.js";
+import candidateAuthRouter from "./routes/candidate-auth.js";
 import assessmentRouter from "./routes/assessment.js";
 import taskRouter from "./routes/task.js";
 import offerLetterRouter from "./routes/offerLetter.js";
@@ -42,14 +43,16 @@ app.use(cors({
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
-app.get("/", (req, res) => {
+app.get(["/", "/api", "/api/"], (req, res) => {
   res.json({
     success: true,
-    message: "Infogenx Backend Running Successfully"
+    message: "Infogenx Candidate Portal API Running Successfully",
+    timestamp: new Date().toISOString()
   });
 });
 
 app.use("/api", loginRouter);
+app.use("/api/candidate-auth", candidateAuthRouter);
 app.use("/api/assessment", assessmentRouter);
 app.use("/api/task", taskRouter);
 app.use("/api/offer-letter", offerLetterRouter);

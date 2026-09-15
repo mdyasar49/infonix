@@ -13,7 +13,7 @@ export const INFOGENX_COLORS = {
   border: 'rgba(0, 18, 60, 0.08)',
 }
 
-const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://api.infogenx.com'
+const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://candidates.infogenx.com'
 const MYSQL_AUTH_URL = `${defaultApi}/api/candidate-auth/login`
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzBZ_OQKodlVo9M1bcUlBQXnZS93NxZQvJdqUIJiFf0ex6TVl-XrN0UW2sMJv8LBuyhhA/exec"
 const API_URL = import.meta.env.VITE_AUTH_API_URL || MYSQL_AUTH_URL

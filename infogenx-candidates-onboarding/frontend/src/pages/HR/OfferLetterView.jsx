@@ -47,7 +47,7 @@ function OfferLetterView() {
   const todayDateStr = getFormattedDate()
   const startDateStr = getFormattedDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
 
-  const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://api.infogenx.com'
+  const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://candidates.infogenx.com'
   const apiUrl = import.meta.env.VITE_API_URL || defaultApi
   const isAdmin = user?.role === 'ADMIN' || user?.email === 'test@infogenx.com' || user?.email?.includes('admin@')
 
@@ -313,7 +313,7 @@ function OfferLetterView() {
         }
       }
 
-      const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://api.infogenx.com'
+      const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://candidates.infogenx.com'
       const apiUrl = import.meta.env.VITE_API_URL || defaultApi
 
       const res = await fetch(`${apiUrl}/api/offer-letter/send-email`, {

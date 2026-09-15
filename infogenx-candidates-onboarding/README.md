@@ -3,7 +3,7 @@
 A modern, full-featured **React 19 + Vite + Node.js + Google Apps Script** candidate onboarding, assessment, and offer issuance platform for **Infogenx**. The portal guides applicants seamlessly through registration, login, SOP orientation, timed MCQ assessments, recruitment tasks, candidate profile questionnaires, executive review, and automated offer letter delivery.
 
 🌐 **Portal Production URL:** [https://candidates.infogenx.com](https://candidates.infogenx.com)  
-⚡ **API Production URL:** [https://api.infogenx.com](https://api.infogenx.com)  
+⚡ **API Production URL:** [https://candidates.infogenx.com/api](https://candidates.infogenx.com/api)  
 📦 **GitHub Repository:** [https://github.com/mdyasar49/infogenx-candidates-onboarding](https://github.com/mdyasar49/infogenx-candidates-onboarding)  
 
 ---

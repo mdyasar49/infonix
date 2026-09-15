@@ -30,7 +30,7 @@ function AdminOfferReviewPage() {
   const [startDate, setStartDate] = useState('')
   const [adminNotes, setAdminNotes] = useState('')
 
-  const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://api.infogenx.com'
+  const defaultApi = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://candidates.infogenx.com'
   const apiUrl = import.meta.env.VITE_API_URL || defaultApi
 
   const loadData = async () => {

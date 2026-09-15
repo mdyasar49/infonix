@@ -37,7 +37,7 @@ function sendWelcomeEmail(email, fullName, password, mobile, skillCategory) {
       muteHttpExceptions: true
     };
 
-    const response = UrlFetchApp.fetch("https://api.infogenx.com/api/candidate-auth/onboard-candidate", options);
+    const response = UrlFetchApp.fetch("https://candidates.infogenx.com/api/candidate-auth/onboard-candidate", options);
     Logger.log("Candidate Auth Onboarding Server Response: " + response.getContentText());
   } catch (apiErr) {
     Logger.log("Candidate Auth Server API warning: " + apiErr.message);
@@ -72,12 +72,13 @@ function sendWelcomeEmail(email, fullName, password, mobile, skillCategory) {
       '<td style="padding: 36px 32px; color: #00123C;">' +
       '<p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear Candidate,</p>' +
       '<p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Thank you for completing the registration form.</p>' +
-      '<p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #334155;">To proceed with your onboarding, please click the below button or following link <a href="' + PORTAL_URL + '" target="_blank" style="color: #2563EB; font-weight: 700; text-decoration: underline;">Click Here</a> to login in to the HR Training Application using your registered email address and the temporary password provided below:</p>' +
-      '<p style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #00123C; font-weight: 700;">Application Link: <a href="' + PORTAL_URL + '" target="_blank" style="color: #2563EB; font-weight: 700; text-decoration: underline;">Click Here</a></p>' +
-      '<p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #00123C; font-weight: 700;">Password: <span style="color: #E65525; font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.05em;">' + password + '</span></p>' +
+      '<p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #334155;">To proceed with your onboarding, please click the button below to log in to the HR Training Application using your registered email address and the temporary password provided below:</p>' +
+      '<div align="center" style="margin: 24px 0 18px 0;">' +
+      '<p style="margin: 0; font-size: 15px; line-height: 1.6; color: #00123C; font-weight: 700;">Password: <span style="color: #E65525; font-family: monospace; font-size: 19px; font-weight: 800; letter-spacing: 0.05em; background-color: #FFEEE9; padding: 6px 14px; border-radius: 6px; border: 1px dashed #E65525; display: inline-block; margin-left: 6px;">' + password + '</span></p>' +
+      '</div>' +
       '<!-- CTA Button -->' +
-      '<div align="center" style="margin: 28px 0 24px 0;">' +
-      '<a href="' + PORTAL_URL + '" target="_blank" style="background: linear-gradient(90deg, #00123C 0%, #E65525 100%); color: #FFFFFF !important; text-decoration: none; padding: 15px 42px; border-radius: 10px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 8px 22px rgba(230, 85, 37, 0.25); text-align: center;">Access to HR Training →</a>' +
+      '<div align="center" style="margin: 18px 0 24px 0;">' +
+      '<a href="' + PORTAL_URL + '" target="_blank" style="background: linear-gradient(90deg, #00123C 0%, #E65525 100%); color: #FFFFFF !important; text-decoration: none; padding: 15px 42px; border-radius: 10px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 8px 22px rgba(230, 85, 37, 0.25); text-align: center;">Access HR Training Application →</a>' +
       '</div>' +
       '<!-- Direct Link Fallback -->' +
       '<p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #475569;">Please complete the training process at your earliest convenience. If you encounter any issues accessing the portal through the button above, copy and paste the following link directly into your browser:</p>' +
@@ -103,8 +104,7 @@ function sendWelcomeEmail(email, fullName, password, mobile, skillCategory) {
 
     const plainTextBody = "Dear Candidate,\n\n" +
       "Thank you for completing the registration form.\n\n" +
-      "To proceed with your onboarding, please click the following link https://candidates.infogenx.com/login to login in to the HR Training Application using your registered email address and the temporary password provided below:\n\n" +
-      "Application Link: " + PORTAL_URL + "\n" +
+      "To proceed with your onboarding, please click the button below to log in to the HR Training Application using your registered email address and the temporary password provided below:\n\n" +
       "Password: " + password + "\n\n" +
       "Please complete the training process at your earliest convenience. If you encounter any issues accessing the portal through the button above, copy and paste the following link directly into your browser:\n\n" +
       PORTAL_URL + "\n\n" +
