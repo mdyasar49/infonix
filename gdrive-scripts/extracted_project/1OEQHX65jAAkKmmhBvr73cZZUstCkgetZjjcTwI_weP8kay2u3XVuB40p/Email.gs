@@ -18,7 +18,7 @@ function sendWelcomeEmail(email, fullName, password, mobile, skillCategory) {
   cache.put(cacheKey, "true", 15); // 15-second window lock
 
   const PORTAL_URL = "https://candidates.infogenx.com/login";
-  const subject = "Infogenx HR Training Credentials";
+  const subject = "Infogenx HR Training Credentials - INFOGENX Candidate Onboarding & Assessment Portal";
 
   // 1. Sync candidate record to Backend Database so they can log in
   try {
