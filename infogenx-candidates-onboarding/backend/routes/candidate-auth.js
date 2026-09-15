@@ -30,11 +30,11 @@ async function ensureCandidateUsersTable() {
     // Ensure assessment_attempts and max_attempts columns exist if table was previously created
     try {
       await pool.execute(`ALTER TABLE candidate_users ADD COLUMN assessment_attempts INT DEFAULT 0;`);
-    } catch (colErr) {}
+    } catch (colErr) { }
 
     try {
       await pool.execute(`ALTER TABLE candidate_users ADD COLUMN max_attempts INT DEFAULT 1;`);
-    } catch (colErr) {}
+    } catch (colErr) { }
 
     // Seed or update default accounts: test_user gets max_attempts = -1 (unlimited), candidate gets 1
     await pool.execute(`UPDATE candidate_users SET max_attempts = -1 WHERE role IN ('test_user', 'admin')`);
@@ -100,7 +100,7 @@ router.post('/login', async (req, res) => {
           // Sync candidate password to the latest input credentials
           try {
             await pool.execute(`UPDATE candidate_users SET password = ? WHERE id = ?`, [cleanInputPass, user.id]);
-          } catch (e) {}
+          } catch (e) { }
         }
       }
 
@@ -208,7 +208,7 @@ router.get('/check-attempt', async (req, res) => {
     const isTest = user.role === 'test_user';
     const attempts = user.assessment_attempts || 0;
     const max = user.max_attempts !== null && user.max_attempts !== undefined ? user.max_attempts : (isTest ? -1 : 1);
-    
+
     // Completely dynamic & reusable: -1 means unlimited, otherwise attempts < max
     const canAttempt = max === -1 || isTest || attempts < max;
 
@@ -428,25 +428,54 @@ function computeCandidatePassword(name, dob) {
   return `${prefix}${year}`;
 }
 
+const recentOnboardedEmails = new Map();
+
 router.post('/onboard-candidate', async (req, res) => {
   try {
     await ensureCandidateUsersTable();
     const { fullName, email, mobile = '', location = '', qualification = '', dob = '', role = 'candidate' } = req.body;
-    
+
     if (!fullName || !email) {
       return res.status(400).json({ success: false, message: 'Full name and email are required.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const candidatePassword = req.body.password || computeCandidatePassword(fullName, dob);
+    const now = Date.now();
 
-    // Save/Update in cPanel MySQL
-    await pool.execute(
-      `INSERT INTO candidate_users (name, email, password, role, mobile, location, qualification, max_attempts)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-       ON DUPLICATE KEY UPDATE name = VALUES(name), password = VALUES(password), mobile = VALUES(mobile), location = VALUES(location), qualification = VALUES(qualification)`,
-      [fullName, cleanEmail, candidatePassword, role, mobile, location, qualification]
+    // 1. Check in-memory 15-minute deduplication lock
+    if (recentOnboardedEmails.has(cleanEmail)) {
+      const lastSentTime = recentOnboardedEmails.get(cleanEmail);
+      if (now - lastSentTime < 15 * 60 * 1000) {
+        console.log(`[Onboard] Skipped duplicate welcome email for ${cleanEmail} (memory lock).`);
+        return res.status(200).json({ success: true, message: 'Candidate onboarded (duplicate email suppressed).' });
+      }
+    }
+
+    // 2. Check MySQL Database: If candidate already registered, update details and re-send welcome email
+    const [existingUsers] = await pool.execute(
+      `SELECT id, password FROM candidate_users WHERE email = ?`,
+      [cleanEmail]
     );
+
+    let candidatePassword = req.body.password || computeCandidatePassword(fullName, dob);
+
+    if (existingUsers.length > 0) {
+      console.log(`[Onboard] Candidate ${cleanEmail} already exists in MySQL. Updating credentials and re-sending welcome email.`);
+      candidatePassword = existingUsers[0].password || candidatePassword;
+      await pool.execute(
+        `UPDATE candidate_users SET name = ?, password = ?, mobile = COALESCE(NULLIF(?, ''), mobile), location = COALESCE(NULLIF(?, ''), location), qualification = COALESCE(NULLIF(?, ''), qualification) WHERE email = ?`,
+        [fullName, candidatePassword, mobile, location, qualification, cleanEmail]
+      );
+    } else {
+      // Save/Insert into cPanel MySQL
+      await pool.execute(
+        `INSERT INTO candidate_users (name, email, password, role, mobile, location, qualification, max_attempts)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+        [fullName, cleanEmail, candidatePassword, role, mobile, location, qualification]
+      );
+    }
+
+    recentOnboardedEmails.set(cleanEmail, now);
 
     // Send Welcome Email
     const PORTAL_URL = 'https://candidates.infogenx.com/login';
@@ -471,34 +500,20 @@ router.post('/onboard-candidate', async (req, res) => {
               </tr>
               <tr>
                 <td style="padding: 36px 32px; color: #00123C;">
-                  <h2 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 800; color: #00123C;">Application Received Successfully 🎉</h2>
-                  <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear <strong>${fullName}</strong>,</p>
-                  <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #334155;">Thank you for applying to Infogenx. Your candidate onboarding account is now active. Please use the credentials below to log in and complete your assessment.</p>
+                  <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear Candidate,</p>
+                  <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Thank you for completing the registration form.</p>
+                  <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #334155;">To proceed with your onboarding, please click the below button or following link <a href="${PORTAL_URL}" target="_blank" style="color: #2563EB; font-weight: 700; text-decoration: underline;">Click Here</a> to login in to the HR Training Application using your registered email address and the temporary password provided below:</p>
                   
-                  <div style="background-color: #FFF8F3; border: 1.5px solid rgba(230, 85, 37, 0.25); border-radius: 12px; padding: 22px; margin-bottom: 26px;">
-                    <h3 style="margin: 0 0 14px 0; font-size: 16px; font-weight: 800; color: #E65525;">Your Login Credentials</h3>
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 14px;">
-                      <tr>
-                        <td style="padding: 6px 0; color: #5C6A86; font-weight: 600; width: 140px;">Registered Email:</td>
-                        <td style="padding: 6px 0; color: #00123C; font-weight: 700;">${cleanEmail}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 6px 0; color: #5C6A86; font-weight: 600;">Generated Password:</td>
-                        <td style="padding: 6px 0; color: #E65525; font-weight: 800; font-family: monospace; font-size: 18px; letter-spacing: 0.05em;">${candidatePassword}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 6px 0; color: #5C6A86; font-weight: 600;">Exam Attempts:</td>
-                        <td style="padding: 6px 0; color: #00123C; font-weight: 700;">Strictly 1 Attempt Allowed</td>
-                      </tr>
-                    </table>
-                  </div>
+                  <p style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #00123C; font-weight: 700;">Application Link: <a href="${PORTAL_URL}" target="_blank" style="color: #2563EB; font-weight: 700; text-decoration: underline;">Click Here</a></p>
+                  <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #00123C; font-weight: 700;">Password: <span style="color: #E65525; font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 0.05em;">${candidatePassword}</span></p>
 
-                  <p style="margin: 0 0 28px 0; font-size: 15px; line-height: 1.6; color: #334155;">Thanks for filling out this form, Please login to the HR Training Applicaiton with below user name and password and complete all training Process</p>
-                  
-                  <div align="center" style="margin: 30px 0 24px 0;">
-                    <a href="${PORTAL_URL}" target="_blank" style="background: linear-gradient(90deg, #00123C 0%, #E65525 100%); color: #FFFFFF !important; text-decoration: none; padding: 15px 36px; border-radius: 10px; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 8px 22px rgba(0, 18, 60, 0.16); text-align: center;">Access Candidate Assessment Portal →</a>
+                  <div align="center" style="margin: 28px 0 24px 0;">
+                    <a href="${PORTAL_URL}" target="_blank" style="background: linear-gradient(90deg, #00123C 0%, #E65525 100%); color: #FFFFFF !important; text-decoration: none; padding: 15px 42px; border-radius: 10px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 8px 22px rgba(230, 85, 37, 0.25); text-align: center;">Access to HR Training →</a>
                   </div>
-                  <p style="margin: 0; font-size: 13px; color: #94A3B8; text-align: center;">Portal URL: <a href="${PORTAL_URL}" style="color: #E65525;">${PORTAL_URL}</a></p>
+                  <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #475569;">Please complete the training process at your earliest convenience. If you encounter any issues accessing the portal through the button above, copy and paste the following link directly into your browser:</p>
+                  <p style="margin: 0 0 28px 0; font-size: 14px; text-align: center;"><a href="${PORTAL_URL}" target="_blank" style="color: #2563EB; font-weight: 600; text-decoration: underline;">${PORTAL_URL}</a></p>
+                  <p style="margin: 0 0 4px 0; font-size: 15px; line-height: 1.6; color: #334155;">Best regards,</p>
+                  <p style="margin: 0; font-size: 15px; font-weight: 700; color: #00123C;">Infogenx Talent Acquisition & HR Operations</p>
                 </td>
               </tr>
               <!-- Unified Footer -->
@@ -518,7 +533,7 @@ router.post('/onboard-candidate', async (req, res) => {
     `;
 
     await transporter.sendMail({
-      from: '"Infogenx Recruitment Operations" <infogenx.dm@gmail.com>',
+      from: '"Infogenx" <infogenx.dm@gmail.com>',
       to: cleanEmail,
       subject: 'Application Received Successfully - Infogenx Candidate Assessment Portal',
       html: htmlContent

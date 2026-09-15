@@ -9,7 +9,10 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 FOLDER_ID = "1s4CBPGNHYXKNcG6evUc7Q8Awv_SmLK0u"
-SERVICE_ACCOUNT_FILE = r"d:\infonix\sheet-sync-504707-85df40232946.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "credentials.json")
+if not os.path.exists(SERVICE_ACCOUNT_FILE):
+    SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(BASE_DIR), "credentials.json")
 
 creds = service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE,

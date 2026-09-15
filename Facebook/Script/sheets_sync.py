@@ -90,6 +90,10 @@ def get_credentials_path() -> Path:
     path = Path(os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", str(DEFAULT_CREDENTIALS)))
     if not path.is_absolute():
         path = SCRIPT_DIR / path
+    if not path.exists():
+        fallback = SCRIPT_DIR / "credentials.json"
+        if fallback.exists():
+            return fallback
     return path
 
 

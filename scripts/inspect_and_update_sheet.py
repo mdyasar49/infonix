@@ -11,7 +11,7 @@ if hasattr(sys.stdout, "reconfigure"):
 SPREADSHEET_ID = "16OmRTUts8o6gmd8Aweox90kHjzrjfWrWcZtfOukDh38"
 
 creds_files = [
-    r"d:\infonix\sheet-sync-504707-85df40232946.json",
+    r"credentials.json",
     r"d:\infonix\splendid-planet-504710-d0-9231c038688c.json",
     r"d:\infonix\internship_outreach_automation_full\credentials\token.json"
 ]

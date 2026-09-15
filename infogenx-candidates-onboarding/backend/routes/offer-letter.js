@@ -431,8 +431,7 @@ router.post('/request-approval', async (req, res) => {
               <!-- Content Body -->
               <tr>
                 <td style="padding: 36px 32px; color: #00123C;">
-                  <h2 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 800; color: #00123C;">Assessment Evaluation Result</h2>
-                  <p style="margin: 0 0 18px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear <strong>${candidateName}</strong>,</p>
+                  <p style="margin: 0 0 18px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear Candidate,</p>
                   <p style="margin: 0 0 22px 0; font-size: 14.5px; line-height: 1.7; color: #334155;">
                     Thank you for completing the Infogenx HR Training Assessment. We are pleased to notify you of your assessment evaluation result below:
                   </p>
@@ -511,8 +510,8 @@ router.post('/request-approval', async (req, res) => {
         from: `"Infogenx Talent Acquisition" <${process.env.SMTP_USER || 'infogenx.dm@gmail.com'}>`,
         to: cleanEmail,
         subject: isPassed
-          ? `🎉 Congratulations on your Selection - Infogenx HR Training, ${candidateName}!`
-          : `Infogenx Assessment Result Notification - ${candidateName}`,
+          ? `🎉 Congratulations on your Selection - Infogenx HR Training!`
+          : `Infogenx Assessment Result Notification`,
         html: candidateHtml
       });
       console.log(`[OfferLetter] Candidate status notification email sent to ${cleanEmail}`);
@@ -758,8 +757,7 @@ router.post('/approve', async (req, res) => {
               <tr>
                 <td style="padding: 36px 32px; color: #00123C;">
                   <div style="text-align: right; color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 12px;">Date: ${todayStr}</div>
-                  <h2 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 800; color: #00123C;">Offer Letter Approved 🎉</h2>
-                  <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear <strong>${targetName}</strong>,</p>
+                  <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear Candidate,</p>
                   <p style="font-size: 14.5px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
                     We are pleased to inform you that your <strong>Official Offer Letter</strong> has been reviewed and officially approved by the <strong>Infogenx Management Team</strong>!
                   </p>
@@ -822,7 +820,7 @@ router.post('/approve', async (req, res) => {
       from: `"Infogenx HR Management" <${process.env.SMTP_USER || 'infogenx.dm@gmail.com'}>`,
       to: targetEmail,
       cc: 'admin@infogenx.com',
-      subject: `🎉 Congratulations! Your Official Infogenx Offer Letter has been Approved - ${targetName}`,
+      subject: `🎉 Congratulations! Your Official Infogenx Offer Letter has been Approved`,
       html: candidateHtml,
       attachments
     });

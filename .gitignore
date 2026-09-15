@@ -7,16 +7,21 @@ __pycache__/
 **/__pycache__/
 *.py[cod]
 
+# Credentials and secrets
+credentials/
+**/credentials/
+*credentials*.json
+*.json.key
+splendid-planet-*.json
+.env
+**/.env/
+
 # Dist / build folders
 dist/
 **/dist/
 build/
 **/build/
 
-# OS files
-.DS_Store
-Thumbs.db
-
 # Inner git repo backups
-**/.git_repo/
 .git_repo/
+**/.git_repo/

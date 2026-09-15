@@ -7,7 +7,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 SPREADSHEET_ID = "1QY8hbycY-gdOWRch52SKoUS975U-t3EgZ0JrtdhPCoM"
 creds = service_account.Credentials.from_service_account_file(
-    r"d:\infonix\LinkedIn-Data-Scraping\sheet-sync-504707-85df40232946.json",
+    r"d:\infonix\LinkedIn-Data-Scraping\splendid-planet-504710-d0-d1bee6e83a75.json",
     scopes=["https://www.googleapis.com/auth/spreadsheets"]
 )
 service = build("sheets", "v4", credentials=creds)

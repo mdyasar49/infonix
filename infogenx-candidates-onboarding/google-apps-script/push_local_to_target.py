@@ -14,7 +14,7 @@ TARGET_IDS = [
     "1u1_v1sF907CLG4Yk33NHYMQEtNnpgENiNq4CHqAbUMLHmioZAjvJVzC4"
 ]
 
-LOCAL_DIR = Path(__file__).parent / "extracted_project" / "1OEQHX65jAAkKmmhBvr73cZZUstCkgetZjjcTwI_weP8kay2u3XVuB40p"
+LOCAL_DIR = Path(__file__).parent
 CLASPRC_PATH = Path(os.path.expanduser("~/.clasprc.json"))
 
 def get_auth_token():

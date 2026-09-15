@@ -22,7 +22,10 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 SPREADSHEET_ID_ZOHO = "18oHqPuo6BhAgI5e_GLSSps5fSc_DpzYEYofgPKxBv9o"
-CREDENTIALS_FILE = r"d:\infonix\sheet-sync-504707-85df40232946.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CREDENTIALS_FILE = os.path.join(BASE_DIR, "credentials.json")
+if not os.path.exists(CREDENTIALS_FILE):
+    CREDENTIALS_FILE = os.path.join(os.path.dirname(BASE_DIR), "credentials.json")
 
 HEADERS = [
     "Scraped Date",

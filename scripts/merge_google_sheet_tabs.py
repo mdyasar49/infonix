@@ -16,7 +16,7 @@ SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "credentials.json")
 if not os.path.exists(SERVICE_ACCOUNT_FILE):
     SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "..", "credentials.json")
 if not os.path.exists(SERVICE_ACCOUNT_FILE):
-    SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "..", "sheet-sync-504707-85df40232946.json")
+    SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "..", "splendid-planet-504710-d0-d1bee6e83a75.json")
 
 def merge_all_tabs():
     if not os.path.exists(SERVICE_ACCOUNT_FILE):

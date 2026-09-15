@@ -10,7 +10,7 @@ SPREADSHEET_ID_2 = "18oHqPuo6BhAgI5e_GLSSps5fSc_DpzYEYofgPKxBv9o"
 BASE_DIR = r"d:\infonix"
 
 candidate_creds = [
-    os.path.join(BASE_DIR, "sheet-sync-504707-85df40232946.json"),
+    os.path.join(BASE_DIR, "splendid-planet-504710-d0-d1bee6e83a75.json"),
     os.path.join(BASE_DIR, "splendid-planet-504710-d0-9231c038688c.json"),
     os.path.join(BASE_DIR, "credentials.json")
 ]

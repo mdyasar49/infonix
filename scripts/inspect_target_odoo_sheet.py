@@ -12,7 +12,7 @@ SPREADSHEET_ID = "1X_8LbsHisyvoCfjSuTX5yRVsRgXPDEmu3W5RWXuAC1o"
 # Look for credentials file
 workspace_dir = r"d:\infonix"
 candidate_creds = [
-    os.path.join(workspace_dir, "sheet-sync-504707-85df40232946.json"),
+    os.path.join(workspace_dir, "splendid-planet-504710-d0-d1bee6e83a75.json"),
     os.path.join(workspace_dir, "splendid-planet-504710-d0-9231c038688c.json"),
     os.path.join(workspace_dir, "credentials.json"),
     os.path.join(workspace_dir, "Data-Scraping", "credentials.json")

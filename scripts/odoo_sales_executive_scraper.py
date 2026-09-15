@@ -215,7 +215,7 @@ ODOO_SALES_EXECUTIVES = [
 
 def get_gspread_client():
     candidate_creds = [
-        os.path.join(BASE_DIR, "sheet-sync-504707-85df40232946.json"),
+        os.path.join(BASE_DIR, "splendid-planet-504710-d0-d1bee6e83a75.json"),
         os.path.join(BASE_DIR, "splendid-planet-504710-d0-9231c038688c.json"),
         os.path.join(BASE_DIR, "credentials.json")
     ]

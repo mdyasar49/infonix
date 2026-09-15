@@ -34,6 +34,6 @@ for item in ["Linkedin_scrape.py", "scrape_info.csv"]:
         shutil.copy2(s, os.path.join(TARGET_DIR, item))
 
 # 4. Copy credentials.json
-shutil.copy2(r"d:\infonix\sheet-sync-504707-85df40232946.json", os.path.join(TARGET_DIR, "credentials.json"))
+shutil.copy2(r"credentials.json", os.path.join(TARGET_DIR, "credentials.json"))
 
 print("[✓] Copied all core files into LinkedIn-Data-Scraping")

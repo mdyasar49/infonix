@@ -65,7 +65,7 @@ $environments = @{
     }
     "Candidates" = @{
         Host = "209.182.232.150"; User = "infogenx-candidates"; Pass = "infogenx@1234"
-        LocalSrc  = "$baseDir\student-onboarding\frontend"
+        LocalSrc  = "$baseDir\infogenx-candidates-onboarding\frontend"
         RemoteDir = "/home/infogenx-candidates/htdocs/candidates.infogenx.com"
         Label = "Candidates (candidates.infogenx.com)"; Type = "Frontend"
     }
@@ -437,7 +437,7 @@ foreach ($envKey in $selected) {
     Write-Host "----------------------------------------" -ForegroundColor Magenta
 
     $ok = if ($envKey -eq "Candidates") {
-        & "$baseDir\student-onboarding\scripts\deploy_candidates.ps1"
+        & "$baseDir\infogenx-candidates-onboarding\scripts\deploy_candidates.ps1"
         ($LASTEXITCODE -eq 0)
     } elseif ($env.Type -eq "Api") { 
         Deploy-Api $env 

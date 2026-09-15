@@ -12,7 +12,10 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 SPREADSHEET_ID = "16OmRTUts8o6gmd8Aweox90kHjzrjfWrWcZtfOukDh38"
-SERVICE_ACCOUNT_FILE = r"d:\infonix\sheet-sync-504707-85df40232946.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "credentials.json")
+if not os.path.exists(SERVICE_ACCOUNT_FILE):
+    SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(BASE_DIR), "credentials.json")
 
 def clean_and_format_single_tab():
     creds = service_account.Credentials.from_service_account_file(

@@ -5,7 +5,10 @@ from googleapiclient.discovery import build
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-sa_file = r"d:\infonix\sheet-sync-504707-85df40232946.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sa_file = os.path.join(BASE_DIR, "credentials.json")
+if not os.path.exists(sa_file):
+    sa_file = os.path.join(os.path.dirname(BASE_DIR), "credentials.json")
 creds = service_account.Credentials.from_service_account_file(
     sa_file,
     scopes=["https://www.googleapis.com/auth/spreadsheets"]

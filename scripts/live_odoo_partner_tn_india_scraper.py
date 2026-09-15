@@ -65,10 +65,10 @@ IGNORED_DOMAINS = [
 
 def get_gspread_client():
     candidate_creds = [
-        os.path.join(BASE_DIR, "sheet-sync-504707-85df40232946.json"),
+        os.path.join(BASE_DIR, "splendid-planet-504710-d0-d1bee6e83a75.json"),
         os.path.join(BASE_DIR, "splendid-planet-504710-d0-9231c038688c.json"),
         os.path.join(BASE_DIR, "credentials.json"),
-        os.path.join(os.path.dirname(__file__), "sheet-sync-504707-85df40232946.json")
+        os.path.join(os.path.dirname(__file__), "splendid-planet-504710-d0-d1bee6e83a75.json")
     ]
     creds_path = None
     for p in candidate_creds:

@@ -70,7 +70,7 @@ ZOHO_CRM_HEADERS = [
 
 def get_credentials():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    p = os.path.join(BASE_DIR, "sheet-sync-504707-85df40232946.json")
+    p = os.path.join(BASE_DIR, "splendid-planet-504710-d0-d1bee6e83a75.json")
     if os.path.exists(p):
         return service_account.Credentials.from_service_account_file(p, scopes=scopes)
     return None
