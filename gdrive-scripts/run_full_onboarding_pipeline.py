@@ -70,7 +70,7 @@ def send_gmail(to_email, full_name, password):
         "Content-Type": "application/json"
     }
 
-    subject = "Application Received Successfully - Infogenx Candidate Assessment Portal"
+    subject = "Infogenx HR Training Credentials - INFOGENX Candidate Onboarding & Assessment Portal"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -82,7 +82,7 @@ def send_gmail(to_email, full_name, password):
           <td align="center">
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 640px; background-color: #FFFFFF; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 18, 60, 0.08); border: 1px solid #E2E8F0;">
               <tr>
-                <td align="center" style="background: linear-gradient(135deg, #00123C 0%, #000E68 55%, #E65525 100%); padding: 34px 20px; color: #FFFFFF;">
+                <td align="center" style="background: linear-gradient(135deg, #00123C 0%, #000E68 55%, #E65525 100%); padding: 32px 20px; color: #FFFFFF;">
                   <a href="https://candidates.infogenx.com" target="_blank" style="text-decoration: none; display: inline-block;">
                     <img src="https://candidates.infogenx.com/logo_white.png" alt="INFOGENX" width="180" style="width: 180px; max-width: 180px; height: auto; display: block; margin: 0 auto 8px auto; border: 0;" />
                   </a>
@@ -91,34 +91,21 @@ def send_gmail(to_email, full_name, password):
               </tr>
               <tr>
                 <td style="padding: 36px 32px; color: #00123C;">
-                  <h2 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 800; color: #00123C;">Application Received Successfully 🎉</h2>
-                  <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear <strong>{full_name}</strong>,</p>
-                  <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #334155;">Thank you for submitting your HR Intern candidate application to Infogenx. Your candidate onboarding account is now active.</p>
+                  <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Dear Candidate,</p>
+                  <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">Thank you for completing the registration form.</p>
+                  <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #334155;">To proceed with your onboarding, please click the button below to log in to the HR Training Application using your registered email address and the temporary password provided below:</p>
                   
-                  <div style="background-color: #FFF8F3; border: 1.5px solid rgba(230, 85, 37, 0.25); border-radius: 12px; padding: 22px; margin-bottom: 26px;">
-                    <h3 style="margin: 0 0 14px 0; font-size: 16px; font-weight: 800; color: #E65525;">Your Login Credentials</h3>
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 14px;">
-                      <tr>
-                        <td style="padding: 6px 0; color: #5C6A86; font-weight: 600; width: 140px;">Registered Email:</td>
-                        <td style="padding: 6px 0; color: #00123C; font-weight: 700;">{to_email}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 6px 0; color: #5C6A86; font-weight: 600;">Generated Password:</td>
-                        <td style="padding: 6px 0; color: #E65525; font-weight: 800; font-family: monospace; font-size: 18px; letter-spacing: 0.05em;">{password}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 6px 0; color: #5C6A86; font-weight: 600;">Exam Attempts:</td>
-                        <td style="padding: 6px 0; color: #00123C; font-weight: 700;">Strictly 1 Attempt Allowed</td>
-                      </tr>
-                    </table>
+                  <div align="center" style="margin: 24px 0 18px 0;">
+                    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #00123C; font-weight: 700;">Password: <span style="color: #E65525; font-family: monospace; font-size: 19px; font-weight: 800; letter-spacing: 0.05em; background-color: #FFEEE9; padding: 6px 14px; border-radius: 6px; border: 1px dashed #E65525; display: inline-block; margin-left: 6px;">{password}</span></p>
                   </div>
 
-                  <p style="margin: 0 0 28px 0; font-size: 15px; line-height: 1.6; color: #334155;">Thanks for filling out this form, Please login to the HR Training Applicaiton with below user name and password and complete all training Process</p>
-                  
-                  <div align="center" style="margin: 30px 0 24px 0;">
-                    <a href="{PORTAL_URL}" target="_blank" style="background: linear-gradient(90deg, #00123C 0%, #E65525 100%); color: #FFFFFF !important; text-decoration: none; padding: 15px 36px; border-radius: 10px; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 8px 22px rgba(0, 18, 60, 0.16); text-align: center;">Access Candidate Assessment Portal →</a>
+                  <div align="center" style="margin: 18px 0 24px 0;">
+                    <a href="{PORTAL_URL}" target="_blank" style="background: linear-gradient(90deg, #00123C 0%, #E65525 100%); color: #FFFFFF !important; text-decoration: none; padding: 15px 42px; border-radius: 10px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 8px 22px rgba(230, 85, 37, 0.25); text-align: center;">Access HR Training Application →</a>
                   </div>
-                  <p style="margin: 0; font-size: 13px; color: #94A3B8; text-align: center;">Portal URL: <a href="{PORTAL_URL}" style="color: #E65525;">{PORTAL_URL}</a></p>
+                  <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #475569;">Please complete the training process at your earliest convenience. If you encounter any issues accessing the portal through the button above, copy and paste the following link directly into your browser:</p>
+                  <p style="margin: 0 0 28px 0; font-size: 14px; text-align: center;"><a href="{PORTAL_URL}" target="_blank" style="color: #2563EB; font-weight: 600; text-decoration: underline;">{PORTAL_URL}</a></p>
+                  <p style="margin: 0 0 4px 0; font-size: 15px; line-height: 1.6; color: #334155;">Best regards,</p>
+                  <p style="margin: 0; font-size: 15px; font-weight: 700; color: #00123C;">Infogenx Talent Acquisition & HR Operations</p>
                 </td>
               </tr>
               <!-- Unified Footer -->
