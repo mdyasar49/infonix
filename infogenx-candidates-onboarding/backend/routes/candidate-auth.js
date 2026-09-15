@@ -444,7 +444,7 @@ const recentOnboardedEmails = new Map();
 router.post('/onboard-candidate', async (req, res) => {
   try {
     await ensureCandidateUsersTable();
-    const { fullName, email, mobile = '', location = '', qualification = '', dob = '', role = 'candidate' } = req.body;
+    const { fullName, email, mobile = '', location = '', qualification = '', dob = '', role = 'candidate', skipEmail = false } = req.body;
 
     if (!fullName || !email) {
       return res.status(400).json({ success: false, message: 'Full name and email are required.' });
@@ -453,16 +453,11 @@ router.post('/onboard-candidate', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const now = Date.now();
 
-    // 1. Check in-memory 15-minute deduplication lock
-    if (recentOnboardedEmails.has(cleanEmail)) {
-      const lastSentTime = recentOnboardedEmails.get(cleanEmail);
-      if (now - lastSentTime < 15 * 60 * 1000) {
-        console.log(`[Onboard] Skipped duplicate welcome email for ${cleanEmail} (memory lock).`);
-        return res.status(200).json({ success: true, message: 'Candidate onboarded (duplicate email suppressed).' });
-      }
-    }
+    // 1. Check in-memory 30-minute deduplication lock OR explicit skipEmail flag
+    const isRecent = recentOnboardedEmails.has(cleanEmail) && (now - recentOnboardedEmails.get(cleanEmail) < 30 * 60 * 1000);
+    const shouldSkipEmail = skipEmail || isRecent;
 
-    // 2. Check MySQL Database: If candidate already registered, update details and re-send welcome email
+    // 2. Check MySQL Database: If candidate already registered, update details
     const [existingUsers] = await pool.execute(
       `SELECT id, password FROM candidate_users WHERE email = ?`,
       [cleanEmail]
@@ -471,7 +466,7 @@ router.post('/onboard-candidate', async (req, res) => {
     let candidatePassword = req.body.password || computeCandidatePassword(fullName, dob);
 
     if (existingUsers.length > 0) {
-      console.log(`[Onboard] Candidate ${cleanEmail} already exists in MySQL. Updating credentials and re-sending welcome email.`);
+      console.log(`[Onboard] Candidate ${cleanEmail} already exists in MySQL. Updating credentials.`);
       candidatePassword = existingUsers[0].password || candidatePassword;
       await pool.execute(
         `UPDATE candidate_users SET name = ?, password = ?, mobile = COALESCE(NULLIF(?, ''), mobile), location = COALESCE(NULLIF(?, ''), location), qualification = COALESCE(NULLIF(?, ''), qualification) WHERE email = ?`,
@@ -487,6 +482,15 @@ router.post('/onboard-candidate', async (req, res) => {
     }
 
     recentOnboardedEmails.set(cleanEmail, now);
+
+    if (shouldSkipEmail) {
+      console.log(`[Onboard] Candidate ${cleanEmail} onboarded in DB. Welcome email suppressed (skipEmail=${skipEmail}, isRecent=${isRecent}).`);
+      return res.json({
+        success: true,
+        message: `Candidate credentials synced successfully for ${cleanEmail} (duplicate email suppressed).`,
+        candidate: { name: fullName, email: cleanEmail, password: candidatePassword, portalUrl: 'https://candidates.infogenx.com/login', maxAttempts: 1 }
+      });
+    }
 
     // Send Welcome Email
     const PORTAL_URL = 'https://candidates.infogenx.com/login';

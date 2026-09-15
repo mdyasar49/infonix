@@ -7,27 +7,32 @@ function sendWelcomeEmail(email, fullName, password, mobile, skillCategory) {
   const cleanEmail = email.trim().toLowerCase();
 
   // -------------------------------------------------------------------
-  // 15-Second Deduplication Lock: Prevents concurrent trigger execution per submit
+  // 300-Second (5-Minute) Multi-Project Deduplication Lock
   // -------------------------------------------------------------------
-  const cache = CacheService.getScriptCache();
   const cacheKey = "email_sent_lock_" + cleanEmail;
-  if (cache.get(cacheKey)) {
-    Logger.log("sendWelcomeEmail skipped: Concurrent trigger active for " + cleanEmail);
+  const docCache = CacheService.getDocumentCache();
+  const scriptCache = CacheService.getScriptCache();
+
+  if ((docCache && docCache.get(cacheKey)) || (scriptCache && scriptCache.get(cacheKey))) {
+    Logger.log("sendWelcomeEmail skipped: Deduplication lock active for " + cleanEmail);
     return;
   }
-  cache.put(cacheKey, "true", 15); // 15-second window lock
+
+  if (docCache) docCache.put(cacheKey, "true", 300);
+  if (scriptCache) scriptCache.put(cacheKey, "true", 300);
 
   const PORTAL_URL = "https://candidates.infogenx.com/login";
   const subject = "Infogenx HR Training Credentials";
 
-  // 1. Sync candidate record to Backend Database so they can log in
+  // 1. Sync candidate record to Backend Database (skip email on server to avoid duplicates)
   try {
     const payload = JSON.stringify({
       fullName: fullName || "Candidate",
       email: cleanEmail,
       password: password || "INFO" + Math.floor(1000 + Math.random() * 9000),
       mobile: mobile || "",
-      skillCategory: skillCategory || "General"
+      skillCategory: skillCategory || "General",
+      skipEmail: true
     });
 
     const options = {
