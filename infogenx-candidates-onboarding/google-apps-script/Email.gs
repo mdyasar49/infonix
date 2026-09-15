@@ -1,4 +1,9 @@
 function sendWelcomeEmail(email, fullName, password, mobile, skillCategory) {
+  if (typeof isPrimaryProject === "function" && !isPrimaryProject()) {
+    Logger.log("sendWelcomeEmail skipped: Non-primary Apps Script project.");
+    return;
+  }
+
   if (!email) {
     Logger.log("sendWelcomeEmail skipped: No email provided.");
     return;

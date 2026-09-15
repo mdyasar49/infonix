@@ -16,6 +16,20 @@
 const TARGET_FORM_ID = "1ugPH89EBC1RSVJrrHKs3qnYnyR3y5rXAVwK43wamthE";
 const TARGET_DATABASE_ID = "1tEjn1hJ0rd2pNV3kaLyv4SitFyoRLwCKb5loAdEvjoM";
 const BACKUP_FORM_ID = "1hBH8dGgH-yNFFfnS0tHOmsZM-Tm3HhiSY-BXCNWlMV0";
+const PRIMARY_PROJECT_ID = "1KCvVM5_9iTYM484tL7Y2TeZq4QFR6EeA7xMpSwLnMolNTXQk3L_PBPww";
+
+function isPrimaryProject() {
+  try {
+    const currentId = ScriptApp.getScriptId();
+    if (currentId && currentId !== PRIMARY_PROJECT_ID) {
+      Logger.log("⚠️ Primary Project Lock: Skipping execution for non-primary project ID: " + currentId);
+      return false;
+    }
+  } catch (err) {
+    Logger.log("ScriptId check note: " + err.message);
+  }
+  return true;
+}
 
 /**
  * Main Onboarding Event Handler
@@ -42,6 +56,11 @@ function onEdit(e) {
 
 function onStudentRegistration(e) {
   try {
+    if (!isPrimaryProject()) {
+      Logger.log("Execution aborted: Non-primary Apps Script project.");
+      return;
+    }
+
     Logger.log("=== onStudentRegistration triggered ===");
 
     // -------------------------------------------------------
